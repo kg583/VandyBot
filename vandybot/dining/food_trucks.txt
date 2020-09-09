@@ -1,0 +1,24 @@
+buns-on-the-run: Buns on the Run
+califarmia: Califarmia
+chicken-shack: Chicken Shack Express
+chicken-shack-express: Chicken Shack Express
+culinary-creations: Creative Culinary Creations
+creative-culinary-creations: Creative Culinary Creations
+florinda: Florinda's Cocina
+florindas-cocina: Florinda's Cocina
+pie-town: Pie Town Tacos
+pie-town-taco: Pie Town Tacos
+pie-town-tacos: Pie Town Tacos
+pucketts: Pucketts
+roscoes: Roscoe's Smoked BBQ
+roscoes-bbq: Roscoe's Smoked BBQ
+roscoes-smoked-bbq: Roscoe's Smoked BBQ
+smokin: Smokin' Buttz
+smokin-butts: Smokin' Buttz
+smokin-buttz: Smokin' Buttz
+love-bus: The Love Bus
+the-love-bus: The Love Bus
+steaming-goat: The Steaming Goat
+the-steaming-goat: The Steaming Goat
+yayos: Yayos OMG
+yayos-omg: Yayos OMG
