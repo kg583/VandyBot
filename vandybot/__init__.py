@@ -22,8 +22,10 @@ async def on_message(message):
 
 
 async def main():
+    # Establish cogs
     bot.add_cog(Dining(bot))
 
+    # Tokens
     token = env_file.get()
     if 'DBL_TOKEN' in token:
         bot.add_cog(TopGG(bot, token['DBL_TOKEN']))

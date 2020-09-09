@@ -1,7 +1,7 @@
 import asyncio
 from vandybot import main
 
-
+# Debug flag
 DEBUG = False
 
 

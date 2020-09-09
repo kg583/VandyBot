@@ -1,8 +1,10 @@
 import aiohttp
 import datetime
 
+# A nice grey
 DEFAULT_COLOR = 0x9B9B9B
 
+# Replace common separators with '-'
 seps = str.maketrans({" ": "-",
                       "_": "-"})
 
@@ -27,6 +29,7 @@ def reader(filename):
     entries = {}
     with open(f"{filename}.txt") as file:
         for line in file.readlines():
+            # key: value
             entry = line.replace("\n", "").split(": ")
             entries.update({entry[0]: entry[1]})
     return entries

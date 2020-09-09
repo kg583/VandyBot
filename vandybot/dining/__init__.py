@@ -40,6 +40,7 @@ class Dining(commands.Cog):
         return embed
 
     async def reset(self):
+        # Because POST requests are bad and should feel bad
         await self._session.post(menu.url + "/Home/ResetSelections", headers=menu.header)
 
     @commands.command(name="menu",
@@ -51,6 +52,7 @@ class Dining(commands.Cog):
     async def menu(self, ctx, *args):
         unit, day, meal = self.menu_parse(args)
 
+        # Food trucks are special
         if unit in self._food_trucks.values():
             menu_img = await menu.food_truck_menu(self._session, unit)
             embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
@@ -66,6 +68,7 @@ class Dining(commands.Cog):
 
             meals = [meal] if meal != "all" else unit_menu[day]
             try:
+                # The dispatch is mainly to make the "all" argument less request-intensive
                 for meal in meals:
                     embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                     await ctx.send(embed=embed)
@@ -107,20 +110,26 @@ class Dining(commands.Cog):
 
     def menu_parse(self, args):
         unit, day, meal = None, today(), "next"
+
+        # Args can be in any order
         for arg in args:
             arg = arg.lower().replace("'", "").translate(seps)
             try:
+                # Is a unit?
                 unit = self._units[arg]
             except KeyError:
                 try:
+                    # Is a food truck?
                     unit = self._food_trucks[arg]
                 except KeyError:
                     try:
+                        # Is a meal?
                         if arg in ["all", "next"]:
                             meal = arg
                         else:
                             meal = self._meals[arg]
                     except KeyError:
+                        # Is a day?
                         if arg == "today":
                             day = today()
                         elif arg == "tomorrow":
@@ -169,15 +178,20 @@ class Dining(commands.Cog):
 
     def hours_parse(self, args):
         unit, day = None, today()
+
+        # Args can be in any order
         for arg in args:
             arg = arg.lower().replace("'", "").translate(seps)
             try:
+                # Is a unit?
                 unit = self._units[arg]
             except KeyError:
                 try:
+                    # Is a food truck? Too bad.
                     unit = self._food_trucks[arg]
                     raise menu.HoursNotAvailable from None
                 except KeyError:
+                    # Is a day?
                     if arg == "today":
                         day = today()
                     elif arg == "tomorrow":
