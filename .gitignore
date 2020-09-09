@@ -126,3 +126,4 @@ dmypy.json
 
 # PyCharm stuff
 .idea/
+*_log.txt
