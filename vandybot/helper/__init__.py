@@ -4,6 +4,9 @@ import datetime
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
 
+# GitHub directory
+github = "https://raw.githubusercontent.com/kg583/VandyBot/master"
+
 # Replace common separators with '-'
 seps = str.maketrans({" ": "-",
                       "_": "-"})

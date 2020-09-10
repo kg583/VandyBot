@@ -29,8 +29,7 @@ class Dining(commands.Cog):
     @staticmethod
     def generate_embed(title, url, color, fields, max_len=500):
         embed = Embed(title=title, url=url, color=Color(color))
-        embed.set_thumbnail(url="https://is4-ssl.mzstatic.com/image/thumb/Purple113/v4/bf/59/bb/"
-                                "bf59bb04-3d7d-e7d2-0655-98240cbdade1/source/512x512bb.jpg")
+        embed.set_thumbnail(url=f"{github}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
             if len(text) > max_len:
                 splitter = text[max_len:].find(", ")
