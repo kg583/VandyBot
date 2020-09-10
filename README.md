@@ -6,7 +6,7 @@ VandyBot is a Discord bot written in discord.py for interfacing with various ser
 
 All VandyBot commands are prefixed by a `~`. Current commands include: 
 * `~menu` to access dining menus (e.g. `~menu ebi lunch today`)
-* `~hours` to obtain facility operating hours (e.g. `~hours commons tomorrow`).
+* `~hours` to obtain facility operating hours (e.g. `~hours commons tomorrow`)
 
 Typing `~help` will list all available commands; help with specific commands can be accessed via `~help [command]` (e.g. `help menu`) or `~help [category]` (e.g. `help Dining`).
 
