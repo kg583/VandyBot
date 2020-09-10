@@ -133,12 +133,11 @@ def next_meal(hours, day):
         meals = hours[day]
         if day == today():
             # Check for something right now
-            current_meals = sorted(list(filter(lambda meal: meals[meal][0] <= now().time() <= meals[meal][1],
-                                               meals)),
+            current_meals = sorted([meal for meal in meals if meals[meal][0] <= now().time() <= meals[meal][1]],
                                    key=lambda meal: meal == "Daily Offerings")
             if not current_meals or current_meals[0] == "Daily Offerings":
                 # Check for something later today
-                future_meals = list(filter(lambda meal: now().time() < meals[meal][0], meals))
+                future_meals = [meal for meal in meals if now().time() < meals[meal][0]]
                 if not future_meals:
                     if "Daily Offerings" in current_meals:
                         # Daily Offerings if possible
