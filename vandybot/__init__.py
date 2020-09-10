@@ -2,9 +2,8 @@ import env_file
 from discord import Activity, ActivityType
 from discord.ext import commands
 
-# Import submodules
+# Import cogs
 from vandybot.dining import Dining
-from vandybot.topgg import TopGG
 
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"))
@@ -27,7 +26,5 @@ async def main():
 
     # Tokens
     token = env_file.get()
-    if 'DBL_TOKEN' in token:
-        bot.add_cog(TopGG(bot, token['DBL_TOKEN']))
 
     await bot.start(token["BOT_TOKEN"])
