@@ -1,4 +1,4 @@
-# VandyBot
+# VandyBot [![inviteme](https://img.shields.io/static/v1?style=flat&logo=discord&logoColor=FFF&label=&message=invite&color=7289DA)](https://discord.com/api/oauth2/authorize?client_id=748705643757568080&permissions=247872&scope=bot)
 
 VandyBot is a Discord bot written in discord.py for interfacing with various services at Vanderbilt University. Currently, the only supported service is Campus Dining, but additional features including AnchorLink access and COVID-19 Dashboard connectivity are in the works.
 
@@ -6,7 +6,7 @@ VandyBot is a Discord bot written in discord.py for interfacing with various ser
 
 All VandyBot commands are prefixed by a `~`. Current commands include: 
 * `~menu` to access dining menus (e.g. `~menu ebi lunch today`)
-* `~hours` (e.g. `~hours commons tomorrow`) to obtain facility operating hours.
+* `~hours` to obtain facility operating hours (e.g. `~hours commons tomorrow`).
 
 Typing `~help` will list all available commands; help with specific commands can be accessed via `~help [command]` (e.g. `help menu`) or `~help [category]` (e.g. `help Dining`).
 
