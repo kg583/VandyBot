@@ -35,5 +35,5 @@ class Covid(commands.Cog):
     @covid.error
     async def covid_error(self, ctx, error):
         embed = self.generate_embed(title="Something went wrong", url=None,
-                                    headers=("Error",), rows=(str(error),))
+                                    headers=(type(error).__name__,), rows=(str(error),))
         await ctx.send(embed=embed)

@@ -107,7 +107,7 @@ class Dining(commands.Cog):
     @menu.error
     async def menu_error(self, ctx, error):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
-                                    fields={"Error": str(error)})
+                                    fields={type(error).__name__: str(error)})
         await ctx.send(embed=embed)
         await self.reset()
 
@@ -177,7 +177,7 @@ class Dining(commands.Cog):
     @hours.error
     async def hours_error(self, ctx, error):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
-                                    fields={"Error": str(error)})
+                                    fields={type(error).__name__: str(error)})
         await ctx.send(embed=embed)
         await self.reset()
 
