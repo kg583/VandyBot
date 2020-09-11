@@ -10,9 +10,10 @@ async def get_data(session):
     entries = [[entry.get_text() for entry in row.find_all("td")] for row in rows][1:][::-1]
 
     # Calculate total
-    entries.append(["TOTAL", sum_column(entries, 1), sum_column(entries, 2)])
-    entries[-1].append("{:.2f}%".format(100 * entries[-1][2] / entries[-1][1]))
-    entries[-1] = list(map(lambda entry: bold(str(entry)), entries[-1]))
+    total = ["TOTAL", sum_column(entries, 1), sum_column(entries, 2)]
+    total.append("{:.2f}%".format(100 * total[2] / total[1]))
+    total = list(map(bold, [total[0], "{:,}".format(total[1]), "{:,}".format(total[2]), str(total[3])]))
+    entries.append(total)
 
     return [[entry[0], f"{entry[2]}/{entry[1]}", entry[3]] for entry in entries]
 
