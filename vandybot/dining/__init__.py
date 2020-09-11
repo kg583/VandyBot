@@ -66,17 +66,19 @@ class Dining(commands.Cog):
                 meal, day = menu.next_meal(unit_hours, day)
 
             meals = [meal] if meal != "all" else unit_menu[day]
-            try:
-                # The dispatch is mainly to make the "all" argument less request-intensive
-                for meal in meals:
-                    embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
-                    await ctx.send(embed=embed)
-            except KeyError:
-                raise menu.MenuNotFound(unit) from None
+
+            # The dispatch is mainly to make the "all" argument less request-intensive
+            for meal in meals:
+                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                await ctx.send(embed=embed)
 
         await self.reset()
 
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
+        # Quality of life parse
+        if meal not in unit_menu[day]:
+            meal = {"Breakfast": "Brunch", "Brunch": "Breakfast"}.get(meal, meal)
+
         items = await menu.select(self._session, unit_menu, unit, day, meal)
 
         if day == today():

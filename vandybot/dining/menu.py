@@ -152,8 +152,6 @@ def next_meal(hours, day):
 
 async def select(session, menu, unit, day, meal):
     try:
-        if meal not in menu[day]:
-            meal = {"Breakfast": "Brunch", "Brunch": "Breakfast"}.get(meal, meal)
         meal_oid = menu[day][meal]
     except KeyError:
         raise MenuNotFound(unit) from None
