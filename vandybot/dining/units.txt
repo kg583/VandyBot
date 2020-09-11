@@ -1,15 +1,27 @@
 2301: 2301
 rand: Rand Dining Center
 rand-dining: Rand Dining Center
+rand-dining-center: Rand Dining Center
 commons: The Commons Dining Center
 commons-dining: The Commons Dining Center
+commons-dining-center: The Commons Dining Center
+the-commons-dining-center: The Commons Dining Center
 ebi: E. Bronson Ingram Dining Center
+ingram-dining: E. Bronson Ingram Dining Center
+bronson-ingram-dining: E. Bronson Ingram Dining Center
+e.-bronson-ingram-dining: E. Bronson Ingram Dining Center
+ingram-dining-center: E. Bronson Ingram Dining Center
+bronson-ingram-dining-center: E. Bronson Ingram Dining Center
+e.-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
 bronson: E. Bronson Ingram Dining Center
 kissam: The Kitchen at Kissam
 kitchen: The Kitchen at Kissam
 the-kitchen: The Kitchen at Kissam
 kissam-kitchen: The Kitchen at Kissam
+the-kitchen-at-kissam: The Kitchen at Kissam
 zeppos: Zeppos Dining
+zeppos-dining: Zeppos Dining
+zeppos-dining-center: Zeppos Dining
 local-java-cafe: Local Java Cafe
 local-java: Local Java Cafe
 java: Local Java Cafe
@@ -19,25 +31,82 @@ branscomb-munchie: Branscomb Munchie
 commons-market: Common Grounds Market
 commons-munchie: Common Grounds Market
 common-grounds: Common Grounds Market
+common-grounds-market: Common Grounds Market
 highland: Highland Market
 highland-munchie: Highland Market
 highland-market: Highland Market
 kissam-munchie: Kissam Munchie
 buttrick: Buttrick Hall PickUpSpot
 buttrick-pickup: Buttrick Hall PickUpSpot
+buttrick-pickupspot: Buttrick Hall PickUpSpot
+buttrick-pickup-spot: Buttrick Hall PickUpSpot
 buttrick-hall-pickup: Buttrick Hall PickUpSpot
+buttrick-hall-pickupspot: Buttrick Hall PickUpSpot
+buttrick-hall-pickup-spot: Buttrick Hall PickUpSpot
+buttrick-pick-up: Buttrick Hall PickUpSpot
+buttrick-pick-upspot: Buttrick Hall PickUpSpot
+buttrick-pick-up-spot: Buttrick Hall PickUpSpot
+buttrick-hall-pick-up: Buttrick Hall PickUpSpot
+buttrick-hall-pick-upspot: Buttrick Hall PickUpSpot
+buttrick-hall-pick-up-spot: Buttrick Hall PickUpSpot
 club-pickup: University Club PickUpSpot
+club-pickupspot: University Club PickUpSpot
+club-pickup-spot: University Club PickUpSpot
 university-club-pickup: University Club PickUpSpot
+university-club-pickupspot: University Club PickUpSpot
+university-club-pickup-spot: University Club PickUpSpot
 university-club: University Club PickUpSpot
 university-pickup: University Club PickUpSpot
+university-pickupspot: University Club PickUpSpot
+university-pickup-spot: University Club PickUpSpot
+club-pick-up: University Club PickUpSpot
+club-pick-upspot: University Club PickUpSpot
+club-pick-up-spot: University Club PickUpSpot
+university-club-pick-up: University Club PickUpSpot
+university-club-pick-upspot: University Club PickUpSpot
+university-club-pick-up-spot: University Club PickUpSpot
+university-club: University Club PickUpSpot
+university-pick-up: University Club PickUpSpot
+university-pick-upspot: University Club PickUpSpot
+university-pick-up-spot: University Club PickUpSpot
 wilson: Wilson Hall PickUpSpot
 wilson-pickup: Wilson Hall PickUpSpot
+wilson-pickupspot: Wilson Hall PickUpSpot
+wilson-pickup-spot: Wilson Hall PickUpSpot
 wilson-hall-pickup: Wilson Hall PickUpSpot
+wilson-hall-pickupspot: Wilson Hall PickUpSpot
+wilson-hall-pickup-spot: Wilson Hall PickUpSpot
+wilson-pick-up: Wilson Hall PickUpSpot
+wilson-pick-upspot: Wilson Hall PickUpSpot
+wilson-pick-up-spot: Wilson Hall PickUpSpot
+wilson-hall-pick-up: Wilson Hall PickUpSpot
+wilson-hall-pick-upspot: Wilson Hall PickUpSpot
+wilson-hall-pick-up-spot: Wilson Hall PickUpSpot
 suzie-alumni: Suzie's at Alumni
+suzie-at-alumni: Suzie's at Alumni
 suzies-alumni: Suzie's at Alumni
+suzies-at-alumni: Suzie's at Alumni
 branscomb-pickup: Branscomb PickUpSpot
+branscomb-pickupspot: Branscomb PickUpSpot
+branscomb-pickup-spot: Branscomb PickUpSpot
+branscomb-pick-up: Branscomb PickUpSpot
+branscomb-pick-upspot: Branscomb PickUpSpot
+branscomb-pick-up-spot: Branscomb PickUpSpot
 towers: Carmichael Towers PickUpSpot
 towers-pickup: Carmichael Towers PickUpSpot
+towers-pickupspot: Carmichael Towers PickUpSpot
+towers-pickup-spot: Carmichael Towers PickUpSpot
+carmichael-towers: Carmichael Towers PickUpSpot
+carmichael-towers-pickup: Carmichael Towers PickUpSpot
+carmichael-towers-pickupspot: Carmichael Towers PickUpSpot
+carmichael-towers-pickup-spot: Carmichael Towers PickUpSpot
+towers-pickup: Carmichael Towers PickUpSpot
+towers-pick-upspot: Carmichael Towers PickUpSpot
+towers-pick-up-spot: Carmichael Towers PickUpSpot
+carmichael-towers: Carmichael Towers PickUpSpot
+carmichael-towers-pick-up: Carmichael Towers PickUpSpot
+carmichael-towers-pick-upspot: Carmichael Towers PickUpSpot
+carmichael-towers-pick-up-spot: Carmichael Towers PickUpSpot
 aryeh: Aryeh's Food Truck
 aryehs: Aryeh's Food Truck
 aryeh-food-truck: Aryeh's Food Truck
@@ -47,4 +116,10 @@ grins-vegetarian: Grins Vegetarian Cafe
 grins-cafe: Grins Vegetarian Cafe
 grins-vegetarian-cafe: Grins Vegetarian Cafe
 suzie-stevenson: Suzie's at Stevenson Library
+suzie-at-library: Suzie's at Stevenson Library
+suzie-at-stevenson: Suzie's at Stevenson Library
+suzie-at-stevenson-library: Suzie's at Stevenson Library
 suzies-stevenson: Suzie's at Stevenson Library
+suzies-at-library: Suzie's at Stevenson Library
+suzies-at-stevenson: Suzie's at Stevenson Library
+suzies-at-stevenson-library: Suzie's at Stevenson Library
