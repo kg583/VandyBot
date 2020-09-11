@@ -18,6 +18,7 @@ kissam: The Kitchen at Kissam
 kitchen: The Kitchen at Kissam
 the-kitchen: The Kitchen at Kissam
 kissam-kitchen: The Kitchen at Kissam
+kitchen-at-kissam: The Kitchen at Kissam
 the-kitchen-at-kissam: The Kitchen at Kissam
 zeppos: Zeppos Dining
 zeppos-dining: Zeppos Dining
