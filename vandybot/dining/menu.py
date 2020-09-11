@@ -58,7 +58,7 @@ async def get_hours(session, unit_oid, menu):
                           headers=header)
     soup = BeautifulSoup(response, "html.parser")
     blocks = [Day(time) if Day().is_day(time) else time for time in map(BeautifulSoup.get_text, soup.find_all("td"))]
-    index, counter, current_day = 0, -1, blocks[0]
+    index, counters = 0, {}
     hours = {}
 
     # Assign time blocks to meals
@@ -66,16 +66,13 @@ async def get_hours(session, unit_oid, menu):
         day = blocks[index]
         # Block elements are either Days or times
         if isinstance(day, Day):
-            if day == current_day:
-                counter += 1
-            else:
-                counter = 0
-                current_day = day
+            # Just in case days don't appear in order
+            counters[day] = counters.get(day, -1) + 1
 
             if day in menu:
                 # Map times to Times
                 begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
-                meal = list(menu[day].keys())[counter]
+                meal = list(menu[day].keys())[counters[day]]
                 if day in hours:
                     hours[day].update({meal: (begin, end)})
                 else:
