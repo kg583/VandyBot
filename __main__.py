@@ -6,7 +6,7 @@ DEBUG = False
 
 
 async def debug():
-    # Left as pass while not being uses
+    # Left as pass while not being used
     pass
 
 

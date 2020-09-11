@@ -107,6 +107,7 @@ class Dining(commands.Cog):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
                                     fields={"Error": str(error)})
         await ctx.send(embed=embed)
+        await self.reset()
 
     def menu_parse(self, args):
         unit, day, meal = None, today(), "next"
@@ -176,6 +177,7 @@ class Dining(commands.Cog):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
                                     fields={"Error": str(error)})
         await ctx.send(embed=embed)
+        await self.reset()
 
     def hours_parse(self, args):
         unit, day = None, today()

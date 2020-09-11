@@ -30,12 +30,19 @@ def underline(string):
     return f"__{string}__"
 
 
-async def fetch(session, url):
-    async with session.get(url) as response:
+async def fetch(session, url, params=None):
+    async with session.get(url, params=params) as response:
         if response.status != 200:
             raise aiohttp.ClientConnectionError from None
         text = await response.text()
         return text.encode().decode("unicode-escape")
+
+
+def parameterize(name, iterable):
+    params = {}
+    for index, item in enumerate(iterable):
+        params.update({f"{name}[{index}]": item})
+    return params
 
 
 async def post(session, url, data=None, headers=None):

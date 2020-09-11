@@ -57,8 +57,8 @@ async def get_hours(session, unit_oid, menu):
                           data={"unitOid": unit_oid},
                           headers=header)
     soup = BeautifulSoup(response, "html.parser")
-    index, counter, current_day = 0, 0, Day()
     blocks = [Day(time) if Day().is_day(time) else time for time in map(BeautifulSoup.get_text, soup.find_all("td"))]
+    index, counter, current_day = 0, -1, blocks[0]
     hours = {}
 
     # Assign time blocks to meals
