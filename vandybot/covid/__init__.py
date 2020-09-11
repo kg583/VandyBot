@@ -28,11 +28,12 @@ class Covid(commands.Cog):
                       usage="")
     async def covid(self, ctx):
         data = await covid.get_data(self._session)
-        embed = self.generate_embed("COVID-19 Dashboard", covid.url,
-                                    ("Week", "Test Results", "Positivity Rate"), data)
+        embed = self.generate_embed(title="COVID-19 Dashboard", url=covid.url,
+                                    headers=("Week", "Test Results", "Positivity Rate"), rows=data)
         await ctx.send(embed=embed)
 
     @covid.error
     async def covid_error(self, ctx, error):
-        embed = self.generate_embed("Something went wrong", None, ("Error",), (str(error),))
+        embed = self.generate_embed(title="Something went wrong", url=None,
+                                    headers=("Error",), rows=(str(error),))
         await ctx.send(embed=embed)

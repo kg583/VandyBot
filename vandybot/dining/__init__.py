@@ -98,13 +98,14 @@ class Dining(commands.Cog):
 
         fields = OrderedDict({meal_str: time_str})
         fields.update({header: ", ".join(text) for header, text in items.items()})
-        embed = self.generate_embed(unit, menu.url, self.color(meal), fields)
+        embed = self.generate_embed(title=unit, url=menu.url, color=self.color(meal), fields=fields)
 
         return embed
 
     @menu.error
     async def menu_error(self, ctx, error):
-        embed = self.generate_embed("Something went wrong", None, DEFAULT_COLOR, {"Error": str(error)})
+        embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
+                                    fields={"Error": str(error)})
         await ctx.send(embed=embed)
 
     def menu_parse(self, args):
@@ -166,13 +167,14 @@ class Dining(commands.Cog):
         else:
             fields = {f"Hours on {day}": "CLOSED"}
 
-        embed = self.generate_embed(unit, menu.url, 0x4A90E2, fields)
+        embed = self.generate_embed(title=unit, url=menu.url, color=0x4A90E2, fields=fields)
         await ctx.send(embed=embed)
         await self.reset()
 
     @hours.error
     async def hours_error(self, ctx, error):
-        embed = self.generate_embed("Something went wrong", None, DEFAULT_COLOR, {"Error": str(error)})
+        embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
+                                    fields={"Error": str(error)})
         await ctx.send(embed=embed)
 
     def hours_parse(self, args):
