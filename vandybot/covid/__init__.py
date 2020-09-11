@@ -23,7 +23,8 @@ class Covid(commands.Cog):
 
     @commands.command(name="covid",
                       brief="Gets current statistics on COVID-19 cases.",
-                      help="",
+                      help="Retrieves the statistics to-date for COVID-19 tests and positive cases among Vanderbilt "
+                           "students, as well as an overall summary of the data. The command takes no arguments.",
                       usage="")
     async def covid(self, ctx):
         data = await covid.get_data(self._session)
