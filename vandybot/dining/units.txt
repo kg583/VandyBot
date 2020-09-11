@@ -9,11 +9,14 @@ the-commons-dining-center: The Commons Dining Center
 ebi: E. Bronson Ingram Dining Center
 ingram-dining: E. Bronson Ingram Dining Center
 bronson-ingram-dining: E. Bronson Ingram Dining Center
+e.-bronson-ingram: E. Bronson Ingram Dining Center
 e.-bronson-ingram-dining: E. Bronson Ingram Dining Center
+e-bronson-ingram: E. Bronson Ingram Dining Center
+e-bronson-ingram-dining: E. Bronson Ingram Dining Center
 ingram-dining-center: E. Bronson Ingram Dining Center
 bronson-ingram-dining-center: E. Bronson Ingram Dining Center
 e.-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
-bronson: E. Bronson Ingram Dining Center
+e-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
 kissam: The Kitchen at Kissam
 kitchen: The Kitchen at Kissam
 the-kitchen: The Kitchen at Kissam
