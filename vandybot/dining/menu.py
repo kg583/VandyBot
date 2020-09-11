@@ -1,5 +1,3 @@
-from bs4 import BeautifulSoup
-
 from ..helper import *
 
 food_truck_url = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-menus/"

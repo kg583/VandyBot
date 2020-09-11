@@ -1,4 +1,5 @@
 import aiohttp
+from bs4 import BeautifulSoup
 import datetime
 
 # A nice grey
@@ -10,6 +11,23 @@ github = "https://raw.githubusercontent.com/kg583/VandyBot/master"
 # Replace common separators with '-'
 seps = str.maketrans({" ": "-",
                       "_": "-"})
+
+
+# Markdown functions
+def bold(string):
+    return f"**{string}**"
+
+
+def italics(string):
+    return f"*{string}*"
+
+
+def strikethrough(string):
+    return f"~~{string}~~"
+
+
+def underline(string):
+    return f"__{string}__"
 
 
 async def fetch(session, url):

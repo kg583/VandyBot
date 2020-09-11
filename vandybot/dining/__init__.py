@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from discord import Color, Embed
+from discord import Embed
 from discord.ext import commands
 
 from ..helper import *
@@ -28,7 +28,7 @@ class Dining(commands.Cog):
 
     @staticmethod
     def generate_embed(title, url, color, fields, max_len=500):
-        embed = Embed(title=title, url=url, color=Color(color))
+        embed = Embed(title=title, url=url, color=color)
         embed.set_thumbnail(url=f"{github}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
             if len(text) > max_len:

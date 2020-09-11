@@ -3,6 +3,7 @@ from discord import Activity, ActivityType
 from discord.ext import commands
 
 # Import cogs
+from vandybot.covid import Covid
 from vandybot.dining import Dining
 
 
@@ -23,6 +24,7 @@ async def on_message(message):
 async def main():
     # Establish cogs
     bot.add_cog(Dining(bot))
+    bot.add_cog(Covid(bot))
 
     # Tokens
     token = env_file.get()
