@@ -72,8 +72,6 @@ class Dining(commands.Cog):
                 embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                 await ctx.send(embed=embed)
 
-        await self.reset()
-
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
         if meal not in unit_menu[day]:
@@ -109,7 +107,6 @@ class Dining(commands.Cog):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
                                     fields={type(error).__name__: str(error)})
         await ctx.send(embed=embed)
-        await self.reset()
 
     def menu_parse(self, args):
         unit, day, meal = None, today(), "next"
@@ -147,6 +144,10 @@ class Dining(commands.Cog):
                 raise commands.BadArgument("No dining facility was provided.") from None
         return unit, day, meal
 
+    @menu.after_invoke
+    async def menu_reset(self, _):
+        await self.reset()
+
     @commands.command(name="hours",
                       brief="Gets the operating hours for on-campus dining locations.",
                       help="Retrieves the operating hours on a given day for on-campus dining locations. "
@@ -172,14 +173,12 @@ class Dining(commands.Cog):
 
         embed = self.generate_embed(title=unit, url=menu.url, color=0x4A90E2, fields=fields)
         await ctx.send(embed=embed)
-        await self.reset()
 
     @hours.error
     async def hours_error(self, ctx, error):
         embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
                                     fields={type(error).__name__: str(error)})
         await ctx.send(embed=embed)
-        await self.reset()
 
     def hours_parse(self, args):
         unit, day = None, today()
@@ -210,3 +209,7 @@ class Dining(commands.Cog):
             if unit is None:
                 raise commands.BadArgument("No dining facility was provided.") from None
         return unit, day
+
+    @hours.after_invoke
+    async def hours_reset(self, _):
+        await self.reset()
