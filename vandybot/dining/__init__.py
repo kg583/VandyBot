@@ -86,7 +86,7 @@ class Dining(commands.Cog):
         else:
             meal_str = f"{meal} on {day}"
 
-        try:
+        if set(unit_menu[day].keys()) == set(unit_hours[day].keys()):
             block = unit_hours[day][meal]
             if now().time() < block[0] and day == today() or day == tomorrow():
                 time_str = f"CLOSED until {block[0]}"
@@ -96,7 +96,7 @@ class Dining(commands.Cog):
                 time_str = f"OPEN until {block[1]}"
             else:
                 time_str = f"OPENS at {block[0]}"
-        except KeyError:
+        else:
             # NetNutrition added a non-existent meal for some reason
             if day == today():
                 time_str = "Available today"
