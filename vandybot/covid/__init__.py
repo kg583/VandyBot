@@ -31,9 +31,3 @@ class Covid(commands.Cog):
         embed = self.generate_embed(title="COVID-19 Dashboard", url=covid.url,
                                     headers=("Week", "Test Results", "Positivity Rate"), rows=data)
         await ctx.send(embed=embed)
-
-    @covid.error
-    async def covid_error(self, ctx, error):
-        embed = self.generate_embed(title="Something went wrong", url=None,
-                                    headers=(type(error).__name__,), rows=(str(error),))
-        await ctx.send(embed=embed)
