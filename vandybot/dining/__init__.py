@@ -86,15 +86,24 @@ class Dining(commands.Cog):
         else:
             meal_str = f"{meal} on {day}"
 
-        block = unit_hours[day][meal]
-        if now().time() < block[0] and day == today() or day == tomorrow():
-            time_str = f"CLOSED until {block[0]}"
-        elif now().time() > block[1] and day == today():
-            time_str = f"CLOSED since {block[1]}"
-        elif block[0] <= now().time() <= block[1] and day == today():
-            time_str = f"OPEN until {block[1]}"
-        else:
-            time_str = f"OPENS at {block[0]}"
+        try:
+            block = unit_hours[day][meal]
+            if now().time() < block[0] and day == today() or day == tomorrow():
+                time_str = f"CLOSED until {block[0]}"
+            elif now().time() > block[1] and day == today():
+                time_str = f"CLOSED since {block[1]}"
+            elif block[0] <= now().time() <= block[1] and day == today():
+                time_str = f"OPEN until {block[1]}"
+            else:
+                time_str = f"OPENS at {block[0]}"
+        except KeyError:
+            # NetNutrition added a non-existent meal for some reason
+            if day == today():
+                time_str = "Available today"
+            elif day == tomorrow():
+                time_str = "Available tomorrow"
+            else:
+                time_str = f"Available on {day}"
 
         fields = OrderedDict({meal_str: time_str})
         fields.update({header: ", ".join(text) for header, text in items.items()})
@@ -166,8 +175,13 @@ class Dining(commands.Cog):
             raise menu.HoursNotFound(unit)
 
         if day in unit_menu:
-            fields = {f"Hours on {day}": "\n".join("{}: {} to {}".format(meal, *hours[meal])
-                                                   for meal in unit_menu[day] if meal != "Daily Offerings")}
+            try:
+                fields = {f"Hours on {day}": "\n".join("{}: {} to {}".format(meal, *hours[meal])
+                                                       for meal in unit_menu[day] if meal != "Daily Offerings")}
+            except KeyError:
+                # NetNutrition added a non-existent meal for some reason
+                fields = {f"Hours on {day}": "Unavailable due to a NetNutrition error.\n"
+                                             "Check the website for current operating hours."}
         else:
             fields = {f"Hours on {day}": "CLOSED"}
 
