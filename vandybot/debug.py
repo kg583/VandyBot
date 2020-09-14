@@ -1,3 +1,4 @@
+debugging = False
 guild = 0
 
 

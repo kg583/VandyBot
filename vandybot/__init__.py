@@ -10,19 +10,17 @@ from vandybot.dining import Dining
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"))
 
-DEBUG = True
-
 
 @bot.event
 async def on_ready():
     print("VandyBot has connected. Awaiting command requests...")
-    activity = "Type ~help for usage!" if not DEBUG else "Currently undergoing maintenance."
+    activity = "Type ~help for usage!" if not debug.debugging else "Currently undergoing maintenance."
     await bot.change_presence(activity=Activity(type=ActivityType.playing, name=activity))
 
 
 @bot.event
 async def on_message(message):
-    if not DEBUG or message.guild.id == debug.guild:
+    if not debug.debugging or message.guild.id == debug.guild:
         await bot.process_commands(message)
 
 
@@ -45,6 +43,8 @@ async def main():
 
     # Tokens
     token = env_file.get()
+    if "DEBUGGING" in token:
+        debug.debugging = bool(token["DEBUGGING"])
     if "DEBUG_GUILD_ID" in token:
         debug.guild = int(token["DEBUG_GUILD_ID"])
 
