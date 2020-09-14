@@ -68,12 +68,12 @@ class Dining(commands.Cog):
                         meal, day = menu.next_meal(unit_hours, day)
                         embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                         await ctx.send(embed=embed)
-
-                    elif meals == ["all"]:
-                        meals = unit_menu[day]
-                    for meal in meals:
-                        embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
-                        await ctx.send(embed=embed)
+                    else:
+                        if meals == ["all"]:
+                            meals = unit_menu[day]
+                        for meal in meals:
+                            embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                            await ctx.send(embed=embed)
 
             await self.reset()
 
