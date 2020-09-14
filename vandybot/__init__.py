@@ -1,8 +1,9 @@
 import env_file
-from discord import Activity, ActivityType
+from discord import Activity, ActivityType, Embed
 from discord.ext import commands
 
 # Import cogs
+from .helper import *
 from vandybot.covid import Covid
 from vandybot.dining import Dining
 
@@ -19,6 +20,18 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
+    if isinstance(error, commands.CommandInvokeError):
+        name, value = str(error).split(":", maxsplit=3)[1:]
+    else:
+        name, value = type(error).__name__, str(error)
+
+    embed.add_field(name=name, value=value)
+    await ctx.send(embed=embed)
 
 
 async def main():

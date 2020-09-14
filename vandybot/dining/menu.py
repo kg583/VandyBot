@@ -4,6 +4,7 @@ food_truck_url = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-men
 url = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
 header = {"Referer": url}
 
+max_selections = 5
 nil = datetime.time(0, 0)
 
 
@@ -35,6 +36,12 @@ class HoursNotFound(Exception):
 class HoursNotAvailable(HoursNotFound):
     def __init__(self, message="The operating hours are not available for food trucks."):
         super().__init__(message)
+
+
+class TooManySelections(Exception):
+    def __init__(self, max_count=max_selections, message="You have requested more than {} selections in one command.\n"
+                                                         "Please separate your requests and try again."):
+        super().__init__(message.format(max_count))
 
 
 async def food_truck_menu(session, unit):

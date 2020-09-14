@@ -49,28 +49,33 @@ class Dining(commands.Cog):
                       usage="location [day=today] [meal=next]\n"
                             "~menu location day [meal=all]\n")
     async def menu(self, ctx, *args):
-        unit, day, meal = self.menu_parse(args)
+        units, days, meals = self.menu_parse(args)
 
-        # Food trucks are special
-        if unit in self._food_trucks.values():
-            menu_img = await menu.food_truck_menu(self._session, unit)
-            embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
-            embed.set_image(url=menu_img)
-            await ctx.send(embed=embed)
-        else:
-            unit_oid = await menu.get_unit_oid(self._session, unit)
-            unit_menu = await menu.get_menu(self._session, unit_oid)
-            unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
-
-            if meal == "next":
-                meal, day = menu.next_meal(unit_hours, day)
-
-            meals = [meal] if meal != "all" else unit_menu[day]
-
-            # The dispatch is mainly to make the "all" argument less request-intensive
-            for meal in meals:
-                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+        for unit in units:
+            # Food trucks are special
+            if unit in self._food_trucks.values():
+                menu_img = await menu.food_truck_menu(self._session, unit)
+                embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
+                embed.set_image(url=menu_img)
                 await ctx.send(embed=embed)
+            else:
+                unit_oid = await menu.get_unit_oid(self._session, unit)
+                for day in days:
+                    unit_menu = await menu.get_menu(self._session, unit_oid)
+                    unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
+                    if meals == ["next"]:
+                        # I feel like this should be separate for some reason
+                        meal, day = menu.next_meal(unit_hours, day)
+                        embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                        await ctx.send(embed=embed)
+
+                    elif meals == ["all"]:
+                        meals = unit_menu[day]
+                    for meal in meals:
+                        embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                        await ctx.send(embed=embed)
+
+            await self.reset()
 
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
@@ -86,7 +91,8 @@ class Dining(commands.Cog):
         else:
             meal_str = f"{meal} on {day}"
 
-        if set(unit_menu[day].keys()) == set(unit_hours[day].keys()):
+        diff = set(unit_menu[day].keys()) - set(unit_hours[day].keys())
+        if diff == set() or diff == set("Daily Offerings"):
             block = unit_hours[day][meal]
             if now().time() < block[0] and day == today() or day == tomorrow():
                 time_str = f"CLOSED until {block[0]}"
@@ -111,47 +117,52 @@ class Dining(commands.Cog):
 
         return embed
 
-    @menu.error
-    async def menu_error(self, ctx, error):
-        embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
-                                    fields={type(error).__name__: str(error)})
-        await ctx.send(embed=embed)
-
     def menu_parse(self, args):
-        unit, day, meal = None, today(), "next"
+        units, days, meals = [], [], []
 
         # Args can be in any order
         for arg in args:
             arg = arg.lower().replace("'", "").translate(seps)
             try:
                 # Is a unit?
-                unit = self._units[arg]
+                units.append(self._units[arg])
             except KeyError:
                 try:
                     # Is a food truck?
-                    unit = self._food_trucks[arg]
+                    units.append(self._food_trucks[arg])
                 except KeyError:
                     try:
                         # Is a meal?
                         if arg in ["all", "next"]:
-                            meal = arg
-                        else:
-                            meal = self._meals[arg]
+                            meals = [arg]
+                        elif meals != ["all"]:
+                            meals.append(self._meals[arg])
                     except KeyError:
                         # Is a day?
                         if arg == "today":
-                            day = today()
+                            days.append(today())
                         elif arg == "tomorrow":
-                            day = tomorrow()
+                            days.append(tomorrow())
                         else:
                             try:
-                                day = Day(arg)
+                                days.append(Day(arg))
                             except ValueError:
                                 raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
-            if unit is None:
-                raise commands.BadArgument("No dining facility was provided.") from None
-        return unit, day, meal
+        if not units:
+            raise commands.BadArgument("No dining facility was provided.") from None
+        if not days:
+            days = [today()]
+        if not meals:
+            if days == [today()]:
+                meals = ["next"]
+            else:
+                meals = ["all"]
+
+        if len(units) * len(days) * len(meals) > menu.max_selections:
+            raise menu.TooManySelections from None
+
+        return units, days, meals
 
     @menu.after_invoke
     async def menu_reset(self, _):
@@ -186,12 +197,6 @@ class Dining(commands.Cog):
             fields = {f"Hours on {day}": "CLOSED"}
 
         embed = self.generate_embed(title=unit, url=menu.url, color=0x4A90E2, fields=fields)
-        await ctx.send(embed=embed)
-
-    @hours.error
-    async def hours_error(self, ctx, error):
-        embed = self.generate_embed(title="Something went wrong", url=None, color=DEFAULT_COLOR,
-                                    fields={type(error).__name__: str(error)})
         await ctx.send(embed=embed)
 
     def hours_parse(self, args):
