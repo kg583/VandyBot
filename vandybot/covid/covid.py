@@ -7,7 +7,7 @@ async def get_data(session):
     response = await fetch(session, url)
     soup = BeautifulSoup(response, "html.parser")
     rows = soup.find("table").find_all("tr")
-    entries = [[entry.get_text() for entry in row.find_all("td")] for row in rows][1:5][::-1]
+    entries = [[entry.get_text() for entry in row.find_all("td")] for row in rows][1:][::-1]
 
     # Calculate total
     total = ["TOTAL", sum_column(entries, 1), sum_column(entries, 2)]
