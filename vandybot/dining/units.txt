@@ -85,11 +85,6 @@ wilson-pick-up-spot: Wilson Hall PickUpSpot
 wilson-hall-pick-up: Wilson Hall PickUpSpot
 wilson-hall-pick-upspot: Wilson Hall PickUpSpot
 wilson-hall-pick-up-spot: Wilson Hall PickUpSpot
-alumni: Suzie's at Alumni
-suzie-alumni: Suzie's at Alumni
-suzie-at-alumni: Suzie's at Alumni
-suzies-alumni: Suzie's at Alumni
-suzies-at-alumni: Suzie's at Alumni
 branscomb-pickup: Branscomb PickUpSpot
 branscomb-pickupspot: Branscomb PickUpSpot
 branscomb-pickup-spot: Branscomb PickUpSpot
@@ -111,20 +106,3 @@ carmichael-towers: Carmichael Towers PickUpSpot
 carmichael-towers-pick-up: Carmichael Towers PickUpSpot
 carmichael-towers-pick-upspot: Carmichael Towers PickUpSpot
 carmichael-towers-pick-up-spot: Carmichael Towers PickUpSpot
-aryeh: Aryeh's Food Truck
-aryehs: Aryeh's Food Truck
-aryeh-food-truck: Aryeh's Food Truck
-aryehs-food-truck: Aryeh's Food Truck
-grins: Grins Vegetarian Cafe
-grins-vegetarian: Grins Vegetarian Cafe
-grins-cafe: Grins Vegetarian Cafe
-grins-vegetarian-cafe: Grins Vegetarian Cafe
-stevenson: Suzie's at Stevenson Library
-suzie-stevenson: Suzie's at Stevenson Library
-suzie-at-library: Suzie's at Stevenson Library
-suzie-at-stevenson: Suzie's at Stevenson Library
-suzie-at-stevenson-library: Suzie's at Stevenson Library
-suzies-stevenson: Suzie's at Stevenson Library
-suzies-at-library: Suzie's at Stevenson Library
-suzies-at-stevenson: Suzie's at Stevenson Library
-suzies-at-stevenson-library: Suzie's at Stevenson Library
