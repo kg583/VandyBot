@@ -29,7 +29,7 @@ class Dining(commands.Cog):
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=500):
         embed = Embed(title=title, url=url, color=color)
-        embed.set_thumbnail(url=f"{github_url}/{_dir}/thumbnail.jpg")
+        embed.set_thumbnail(url=f"{github_raw}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
             if len(text) > max_len:
                 splitter = text[max_len:].find(", ")
@@ -51,7 +51,7 @@ class Dining(commands.Cog):
                             "~menu location day [meal=all]\n"
                             "~menu list")
     async def menu(self, ctx, *args):
-        if args[0] == "list":
+        if args and args[0] == "list":
             await ctx.send(embed=self.menu_list())
         else:
             units, days, meals = self.menu_parse(args)
