@@ -28,12 +28,24 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
-    if isinstance(error, commands.CommandInvokeError):
-        name, value = str(error).split(":", maxsplit=3)[1:]
-    else:
-        name, value = type(error).__name__, str(error)
+    if not isinstance(error, commands.CommandNotFound):
+        if isinstance(error, commands.CommandInvokeError):
+            name, value = str(error).split(":", maxsplit=3)[1:]
+        else:
+            name, value = type(error).__name__, str(error)
 
-    embed.add_field(name=name, value=value)
+        embed.add_field(name=name, value=value)
+        await ctx.send(embed=embed)
+
+
+@bot.command(name="github",
+             brief="VandyBot's GitHub repository.",
+             help="Returns the link to VandyBot's GitHub repository.")
+async def github(ctx):
+    embed = Embed(title="VandyBot on GitHub", url=github_url, color=DEFAULT_COLOR)
+    embed.set_thumbnail(url="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png")
+    embed.add_field(name="VandyBot is Open Source!", value="Check out the code on GitHub.")
+
     await ctx.send(embed=embed)
 
 

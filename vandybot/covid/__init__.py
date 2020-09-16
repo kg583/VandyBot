@@ -15,7 +15,7 @@ class Covid(commands.Cog):
     @staticmethod
     def generate_embed(title, url, headers, rows):
         embed = Embed(title=title, url=url, color=0xD0021B)
-        embed.set_thumbnail(url=f"{github}/{_dir}/thumbnail.png")
+        embed.set_thumbnail(url=f"{github_url}/{_dir}/thumbnail.png")
         for index, header in enumerate(headers):
             embed.add_field(name=header, value="\n".join(row[index] for row in rows))
 

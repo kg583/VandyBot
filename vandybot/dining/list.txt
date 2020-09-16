@@ -1,0 +1,6 @@
+Dining Centers: `rand`\n`commons`\n`ebi`\n`zeppos`\n`2301`
+Retail Dining: `grins`\n`local-java`\n`kissam`\n`aryeh`
+Cafes: `suzies-alumni`\n`suzies-stevenson`
+Food Trucks: `buns-on-the-run`\n`califarmia`\n`chicken-shack`\n`culinary-creations`\n`florindas`\n`pie-town-tacos`\n`pucketts`\n`roscoes`\n`smokin-buttz`\n`love-bus`\n`the-steaming-goat`\n`yayos`
+Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kissam-munchie`
+PickUpSpots: `branscomb-pickup`\n`buttrick-pickup`\n`towers-pickup`\n`wilson-pickup`\n`university-pickup`

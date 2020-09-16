@@ -27,14 +27,14 @@ class Dining(commands.Cog):
         return colors.get(meal, DEFAULT_COLOR)
 
     @staticmethod
-    def generate_embed(title, url, color, fields, max_len=500):
+    def generate_embed(title, url, color, fields, inline=False, max_len=500):
         embed = Embed(title=title, url=url, color=color)
-        embed.set_thumbnail(url=f"{github}/{_dir}/thumbnail.jpg")
+        embed.set_thumbnail(url=f"{github_url}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
             if len(text) > max_len:
                 splitter = text[max_len:].find(", ")
                 text = text[:splitter + max_len] + ", ..."
-            embed.add_field(name=header, value=text, inline=False)
+            embed.add_field(name=header, value=text, inline=inline)
 
         return embed
 
@@ -45,37 +45,42 @@ class Dining(commands.Cog):
     @commands.command(name="menu",
                       brief="Gets menus from on-campus dining locations.",
                       help="Retrieves the menu for a given date and meal from on-campus dining locations. "
-                           "Arguments can be specified in any order.",
+                           "Arguments can be specified in any order.\n"
+                           "Multiple arguments can be provided so long as the total return does not exceed 5 menus.",
                       usage="location [day=today] [meal=next]\n"
-                            "~menu location day [meal=all]\n")
+                            "~menu location day [meal=all]\n"
+                            "~menu list")
     async def menu(self, ctx, *args):
-        units, days, meals = self.menu_parse(args)
+        if args[0] == "list":
+            await ctx.send(embed=self.menu_list())
+        else:
+            units, days, meals = self.menu_parse(args)
 
-        for unit in units:
-            # Food trucks are special
-            if unit in self._food_trucks.values():
-                menu_img = await menu.food_truck_menu(self._session, unit)
-                embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
-                embed.set_image(url=menu_img)
-                await ctx.send(embed=embed)
-            else:
-                unit_oid = await menu.get_unit_oid(self._session, unit)
-                for day in days:
-                    unit_menu = await menu.get_menu(self._session, unit_oid)
-                    unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
-                    if meals == ["next"]:
-                        # I feel like this should be separate for some reason
-                        meal, day = menu.next_meal(unit_hours, day)
-                        embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
-                        await ctx.send(embed=embed)
-                    else:
-                        if meals == ["all"]:
-                            meals = unit_menu[day]
-                        for meal in meals:
+            for unit in units:
+                # Food trucks are special
+                if unit in self._food_trucks.values():
+                    menu_img = await menu.food_truck_menu(self._session, unit)
+                    embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
+                    embed.set_image(url=menu_img)
+                    await ctx.send(embed=embed)
+                else:
+                    unit_oid = await menu.get_unit_oid(self._session, unit)
+                    for day in days:
+                        unit_menu = await menu.get_menu(self._session, unit_oid)
+                        unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
+                        if meals == ["next"]:
+                            # I feel like this should be separate for some reason
+                            meal, day = menu.next_meal(unit_hours, day)
                             embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                             await ctx.send(embed=embed)
+                        else:
+                            if meals == ["all"]:
+                                meals = unit_menu[day]
+                            for meal in meals:
+                                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                                await ctx.send(embed=embed)
 
-            await self.reset()
+                await self.reset()
 
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
@@ -116,6 +121,10 @@ class Dining(commands.Cog):
         embed = self.generate_embed(title=unit, url=menu.url, color=self.color(meal), fields=fields)
 
         return embed
+
+    def menu_list(self):
+        return self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
+                                   fields=reader(f"{_dir}/list"), inline=True)
 
     def menu_parse(self, args):
         units, days, meals = [], [], []
@@ -159,8 +168,8 @@ class Dining(commands.Cog):
             else:
                 meals = ["all"]
 
-        if len(units) * len(days) * len(meals) > menu.max_selections:
-            raise menu.TooManySelections from None
+        if len(units) * len(days) * len(meals) > max_returns:
+            raise TooManySelections from None
 
         return units, days, meals
 

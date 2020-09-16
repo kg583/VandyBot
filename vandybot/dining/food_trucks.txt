@@ -5,6 +5,7 @@ chicken-shack-express: Chicken Shack Express
 culinary-creations: Creative Culinary Creations
 creative-culinary-creations: Creative Culinary Creations
 florinda: Florinda’s Cocina
+florindas: Florinda's Cocina
 florindas-cocina: Florinda’s Cocina
 pie-town: Pie Town Tacos
 pie-town-taco: Pie Town Tacos

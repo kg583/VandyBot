@@ -38,12 +38,6 @@ class HoursNotAvailable(HoursNotFound):
         super().__init__(message)
 
 
-class TooManySelections(Exception):
-    def __init__(self, max_count=max_selections, message="You have requested more than {} selections in one command.\n"
-                                                         "Please separate your requests and try again."):
-        super().__init__(message.format(max_count))
-
-
 async def food_truck_menu(session, unit):
     response = await fetch(session, food_truck_url)
     soup = BeautifulSoup(response, "html.parser")

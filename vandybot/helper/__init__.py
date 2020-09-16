@@ -6,7 +6,11 @@ import datetime
 DEFAULT_COLOR = 0x9B9B9B
 
 # GitHub directory
-github = "https://raw.githubusercontent.com/kg583/VandyBot/master"
+github_raw = "https://raw.githubusercontent.com/kg583/VandyBot/master"
+github_url = "https://github.com/kg583/VandyBot"
+
+# Max returns in a single command
+max_returns = 5
 
 # Replace common separators with '-'
 seps = str.maketrans({" ": "-",
@@ -58,9 +62,15 @@ def reader(filename):
     with open(f"{filename}.txt") as file:
         for line in file.readlines():
             # key: value
-            entry = line.replace("\n", "").split(": ")
+            entry = line.rstrip("\n").encode().decode("unicode_escape").split(": ")
             entries.update({entry[0]: entry[1]})
     return entries
+
+
+class TooManySelections(Exception):
+    def __init__(self, max_count=max_returns, message="You have requested more than {} selections in one command.\n"
+                                                      "Please separate your requests and try again."):
+        super().__init__(message.format(max_count))
 
 
 class Day:

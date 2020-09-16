@@ -29,7 +29,6 @@ zeppos-dining-center: Zeppos Dining
 local-java-cafe: Local Java Cafe
 local-java: Local Java Cafe
 java: Local Java Cafe
-cafe: Local Java Cafe
 branscomb: Branscomb Munchie
 branscomb-munchie: Branscomb Munchie
 commons-market: Common Grounds Market
@@ -86,6 +85,7 @@ wilson-pick-up-spot: Wilson Hall PickUpSpot
 wilson-hall-pick-up: Wilson Hall PickUpSpot
 wilson-hall-pick-upspot: Wilson Hall PickUpSpot
 wilson-hall-pick-up-spot: Wilson Hall PickUpSpot
+alumni: Suzie's at Alumni
 suzie-alumni: Suzie's at Alumni
 suzie-at-alumni: Suzie's at Alumni
 suzies-alumni: Suzie's at Alumni
@@ -119,6 +119,7 @@ grins: Grins Vegetarian Cafe
 grins-vegetarian: Grins Vegetarian Cafe
 grins-cafe: Grins Vegetarian Cafe
 grins-vegetarian-cafe: Grins Vegetarian Cafe
+stevenson: Suzie's at Stevenson Library
 suzie-stevenson: Suzie's at Stevenson Library
 suzie-at-library: Suzie's at Stevenson Library
 suzie-at-stevenson: Suzie's at Stevenson Library
