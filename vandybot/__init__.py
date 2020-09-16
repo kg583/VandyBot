@@ -57,7 +57,8 @@ async def main():
     # Tokens
     token = env_file.get()
     if "DEBUGGING" in token:
-        debug.debugging = bool(token["DEBUGGING"])
+        debug.debugging = token["DEBUGGING"] == "True"
+        print(f"DEBUG MODE == {debug.debugging}")
     if "DEBUG_GUILD_ID" in token:
         debug.guild = int(token["DEBUG_GUILD_ID"])
 
