@@ -14,7 +14,7 @@ Typing `~help` will list all available commands; help with specific commands can
 
 ## Suggestions & Feedback
 
-Bug reports, suggestions, and other feedback can be raised as issues on this repository. If VandyBot goes offline for any reason, message `kg583#8684` on Discord to restart the bot client. If connectivity issues persist, the bot may be moved to 3rd-party hosting service.
+Bug reports, suggestions, and other feedback can be raised as issues on this repository. If VandyBot goes offline for any reason, message `kg583#8684` on Discord to restart the bot client. If connectivity issues persist, the bot may be moved to a 3rd-party hosting service.
 
 ## Disclaimer
 
