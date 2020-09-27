@@ -42,6 +42,13 @@ async def fetch(session, url, params=None):
         return text.encode().decode("unicode-escape")
 
 
+async def jfetch(session, url, params=None):
+    async with session.get(url, params=params) as response:
+        if response.status != 200:
+            raise aiohttp.ClientConnectionError from None
+        return await response.json()
+
+
 def parameterize(name, iterable):
     params = {}
     for index, item in enumerate(iterable):

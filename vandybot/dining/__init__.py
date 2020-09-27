@@ -47,8 +47,8 @@ class Dining(commands.Cog):
                       help="Retrieves the menu for a given date and meal from on-campus dining locations. "
                            "Arguments can be specified in any order.\n"
                            "Multiple arguments can be provided so long as the total return does not exceed 5 menus.",
-                      usage="location [day=today] [meal=next]\n"
-                            "~menu location day [meal=all]\n"
+                      usage="[location] [day=today] [meal=next]\n"
+                            "~menu [location] [day] [meal=all]\n"
                             "~menu list")
     async def menu(self, ctx, *args):
         if args and args[0] == "list":
@@ -123,8 +123,14 @@ class Dining(commands.Cog):
         return embed
 
     def menu_list(self):
-        return self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
-                                   fields=reader(f"{_dir}/list"), inline=True)
+        embed = self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
+                                    fields=reader(f"{_dir}/list"), inline=True)
+        embed.add_field(name="Additional Arguments",
+                        value="Arguments can be specified with different separators\ne.g. `local_java`\n"
+                              "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
+                              "Alternative names are also permitted\ne.g. `kitchen` for `kissam`",
+                        inline=False)
+        return embed
 
     def menu_parse(self, args):
         units, days, meals = [], [], []

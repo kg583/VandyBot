@@ -21,7 +21,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if not debug.debugging or message.guild.id == debug.guild:
+    if message.author != bot.user and (not debug.debugging or message.guild.id == debug.guild):
         await bot.process_commands(message)
 
 
@@ -47,6 +47,13 @@ async def github(ctx):
     embed.add_field(name="VandyBot is Open Source!", value="Check out the code on GitHub.")
 
     await ctx.send(embed=embed)
+
+
+@bot.command(name="ping",
+             brief="Pings the VandyBot client.",
+             help="Returns the current latency to the VandyBot client.")
+async def ping(ctx):
+    await ctx.send(f"~pong ({bot.latency * 1000:.3f}ms)")
 
 
 async def main():
