@@ -97,7 +97,7 @@ class Dining(commands.Cog):
             meal_str = f"{meal} on {day}"
 
         diff = set(unit_menu[day].keys()) - set(unit_hours[day].keys())
-        if diff == set() or diff == set("Daily Offerings"):
+        if diff.issubset(set("Daily Offerings")):
             block = unit_hours[day][meal]
             if now().time() < block[0] and day == today() or day == tomorrow():
                 time_str = f"CLOSED until {block[0]}"

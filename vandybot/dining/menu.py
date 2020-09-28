@@ -175,6 +175,6 @@ async def select(session, menu, unit, day, meal):
             items.update({current_item: items.get(current_item, []) + [item.get_text()]})
 
     if not items:
-        raise MenuNotFound(unit) from None
+        raise MenuNotAvailable(unit) from None
 
     return dict(sorted(items.items()))
