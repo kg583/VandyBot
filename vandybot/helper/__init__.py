@@ -37,7 +37,7 @@ def underline(string):
 async def fetch(session, url, params=None):
     async with session.get(url, params=params) as response:
         if response.status != 200:
-            raise aiohttp.ClientConnectionError from None
+            raise aiohttp.ClientConnectionError(f"Could not fetch from {url}.") from None
         text = await response.text()
         return text.encode().decode("unicode-escape")
 
@@ -45,7 +45,7 @@ async def fetch(session, url, params=None):
 async def jfetch(session, url, params=None):
     async with session.get(url, params=params) as response:
         if response.status != 200:
-            raise aiohttp.ClientConnectionError from None
+            raise aiohttp.ClientConnectionError(f"Could not fetch from {url}.") from None
         return await response.json()
 
 
@@ -59,7 +59,7 @@ def parameterize(name, iterable):
 async def post(session, url, data=None, headers=None):
     async with session.post(url, data=data, headers=headers) as response:
         if response.status != 200:
-            raise aiohttp.ClientConnectionError from None
+            raise aiohttp.ClientConnectionError(f"Could not fetch from {url}.") from None
         text = await response.text()
         return text.encode().decode("unicode-escape")
 

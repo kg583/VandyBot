@@ -30,7 +30,7 @@ async def on_command_error(ctx, error):
     embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
     if not isinstance(error, commands.CommandNotFound):
         if isinstance(error, commands.CommandInvokeError):
-            name, value = str(error).split(":", maxsplit=3)[1:]
+            name, value = str(error).split(":", maxsplit=2)[1:]
         else:
             name, value = type(error).__name__, str(error)
 
