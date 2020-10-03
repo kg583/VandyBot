@@ -17,6 +17,17 @@ class Dining(commands.Cog):
         self._food_trucks = reader(f"{_dir}/food_trucks")
         self._meals = reader(f"{_dir}/meals")
 
+        # Swapped unit commands
+        for unit in self._units:
+            command = commands.Command(self.menu_from_unit(unit),
+                                       name=unit,
+                                       help=f"Alias for ~menu {unit}.",
+                                       usage=f"menu [day=today] [meal=next]\n"
+                                             f"~{unit} menu [location] [day] [meal=all]",
+                                       hidden=True)
+            command.after_invoke(self.menu_reset)
+            self._bot.add_command(command)
+
     @staticmethod
     def color(meal):
         colors = {"Breakfast": 0xEABA38,
@@ -80,8 +91,6 @@ class Dining(commands.Cog):
                                 embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                                 await ctx.send(embed=embed)
 
-                await self.reset()
-
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
         if meal not in unit_menu[day]:
@@ -121,6 +130,15 @@ class Dining(commands.Cog):
         embed = self.generate_embed(title=unit, url=menu.url, color=self.color(meal), fields=fields)
 
         return embed
+
+    def menu_from_unit(self, unit):
+        async def dispatcher(ctx, menu_arg, *args):
+            if menu_arg.lower() != "menu":
+                raise commands.BadArgument(f"Menu scope not provided. Use `~menu {unit}` or `~{unit} menu`.")
+            else:
+                await self.menu(ctx, unit, *args)
+
+        return dispatcher
 
     def menu_list(self):
         embed = self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
@@ -180,7 +198,7 @@ class Dining(commands.Cog):
         return units, days, meals
 
     @menu.after_invoke
-    async def menu_reset(self, _):
+    async def menu_reset(self, *args):
         await self.reset()
 
     @commands.command(name="hours",
@@ -245,5 +263,5 @@ class Dining(commands.Cog):
         return unit, day
 
     @hours.after_invoke
-    async def hours_reset(self, _):
+    async def hours_reset(self, *args):
         await self.reset()

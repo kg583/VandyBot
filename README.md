@@ -9,6 +9,7 @@ All VandyBot commands are prefixed by a `~`. Current commands include:
 * `~github` to return a link to this repository (e.g. `~github`)
 * `~hours` to obtain facility operating hours (e.g. `~hours commons tomorrow`)
 * `~menu` to access dining menus (e.g. `~menu ebi lunch today`)
+* `~ping` to check VandyBot's latency (e.g. `~ping`)
 
 Typing `~help` will list all available commands; help with specific commands can be accessed via `~help [command]` (e.g. `help menu`) or `~help [category]` (e.g. `help Dining`).
 
