@@ -171,9 +171,6 @@ async def select(session, menu, unit, day, meal):
             if current_item == "None":
                 # Sometimes headers just aren't labeled and it makes me sad
                 current_item = meal
-            elif current_item == "Chef James Bistro":
-                # Apparently the bistro pollutes every table it touches on the backend and I do not know why
-                current_item = "Chef's Table"
         else:
             items.update({current_item: items.get(current_item, []) + [item.get_text()]})
 
