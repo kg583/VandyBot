@@ -13,12 +13,13 @@ class Dining(commands.Cog):
         self._bot = bot
         self._session = aiohttp.ClientSession()
 
-        self._units = reader(f"{_dir}/units")
+        self._hours_units = reader(f"{_dir}/hours_units")
+        self._menu_units = reader(f"{_dir}/menu_units")
         self._food_trucks = reader(f"{_dir}/food_trucks")
         self._meals = reader(f"{_dir}/meals")
 
         # Swapped unit commands
-        for unit in self._units:
+        for unit in self._menu_units:
             command = commands.Command(self.menu_from_unit(unit),
                                        name=unit,
                                        help=f"Alias for ~menu {unit}.",
@@ -142,7 +143,7 @@ class Dining(commands.Cog):
 
     def menu_list(self):
         embed = self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
-                                    fields=reader(f"{_dir}/list"), inline=True)
+                                    fields=reader(f"{_dir}/menu_list"), inline=True)
         embed.add_field(name="Additional Arguments",
                         value="Arguments can be specified with different separators\ne.g. `local_java`\n"
                               "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
@@ -158,7 +159,7 @@ class Dining(commands.Cog):
             arg = arg.lower().replace("'", "").translate(seps)
             try:
                 # Is a unit?
-                units.append(self._units[arg])
+                units.append(self._menu_units[arg])
             except KeyError:
                 try:
                     # Is a food truck?
@@ -180,7 +181,11 @@ class Dining(commands.Cog):
                             try:
                                 days.append(Day(arg))
                             except ValueError:
-                                raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
+                                try:
+                                    # Is a unit with hours but no menu?
+                                    raise menu.MenuNotAvailable(self._hours_units[arg])
+                                except KeyError:
+                                    raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
         if not units:
             raise commands.BadArgument("No dining facility was provided.") from None
@@ -205,32 +210,49 @@ class Dining(commands.Cog):
                       brief="Gets the operating hours for on-campus dining locations.",
                       help="Retrieves the operating hours on a given day for on-campus dining locations. "
                            "Arguments can be specified in any order.",
-                      usage="location [day=today]")
+                      usage="location [day=today]\n"
+                            "~hours list")
     async def hours(self, ctx, *args):
-        unit, day = self.hours_parse(args)
-
-        unit_oid = await menu.get_unit_oid(self._session, unit)
-        unit_menu = await menu.get_menu(self._session, unit_oid)
-        unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
-
-        try:
-            hours = unit_hours[day]
-        except KeyError:
-            raise menu.HoursNotFound(unit)
-
-        if day in unit_menu:
-            try:
-                fields = {f"Hours on {day}": "\n".join("{}: {} to {}".format(meal, *hours[meal])
-                                                       for meal in unit_menu[day] if meal != "Daily Offerings")}
-            except KeyError:
-                # NetNutrition added a non-existent meal for some reason
-                fields = {f"Hours on {day}": "Unavailable due to a NetNutrition error.\n"
-                                             "Check the website for current operating hours."}
+        if args and args[0] == "list":
+            await ctx.send(embed=self.hours_list())
         else:
-            fields = {f"Hours on {day}": "CLOSED"}
+            unit, day = self.hours_parse(args)
 
-        embed = self.generate_embed(title=unit, url=menu.url, color=0x4A90E2, fields=fields)
-        await ctx.send(embed=embed)
+            unit_oid = await menu.get_unit_oid(self._session, unit)
+            unit_menu = await menu.get_menu(self._session, unit_oid)
+            unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
+
+            try:
+                hours = unit_hours[day]
+            except KeyError:
+                raise menu.HoursNotFound(unit)
+
+            if day in unit_menu:
+                try:
+                    fields = {f"Hours on {day}": "\n".join("{}: {} to {}".format(meal, *hours[meal])
+                                                           for meal in unit_menu[day] if meal != "Daily Offerings")}
+                except KeyError:
+                    # NetNutrition added a non-existent meal for some reason
+                    fields = {f"Hours on {day}": "Unavailable due to a NetNutrition error.\n"
+                                                 "Check the website for current operating hours."}
+            else:
+                if "Closed" in hours:
+                    fields = {f"Hours on {day}": "CLOSED"}
+                else:
+                    fields = {f"Hours on {day}": "{} to {}".format(*hours["Open"])}
+
+            embed = self.generate_embed(title=unit, url=menu.url, color=0x4A90E2, fields=fields)
+            await ctx.send(embed=embed)
+
+    def hours_list(self):
+        embed = self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
+                                    fields=reader(f"{_dir}/hours_list"), inline=True)
+        embed.add_field(name="Additional Arguments",
+                        value="Arguments can be specified with different separators\ne.g. `local_java`\n"
+                              "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
+                              "Alternative names are also permitted\ne.g. `kitchen` for `kissam`",
+                        inline=False)
+        return embed
 
     def hours_parse(self, args):
         unit, day = None, today()
@@ -240,7 +262,7 @@ class Dining(commands.Cog):
             arg = arg.lower().replace("'", "").translate(seps)
             try:
                 # Is a unit?
-                unit = self._units[arg]
+                unit = self._hours_units[arg]
             except KeyError:
                 try:
                     # Is a food truck? Too bad.

@@ -1,0 +1,4 @@
+Dining Centers: `rand`\n`commons`\n`ebi`\n`zeppos`\n`2301`
+Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kissam-munchie`
+Retail Dining: `local-java`\n`kissam`\n`aryehs`\n`grins`\n`suzies-alumni`\n`suzies-stevenson`
+PickUpSpots: `branscomb-pickup`\n`blair-pickup`

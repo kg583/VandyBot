@@ -29,7 +29,7 @@ class MenuNotAvailable(MenuNotFound):
 
 
 class HoursNotFound(Exception):
-    def __init__(self, unit, message="The operating hours at {} could not be found for the requested meal."):
+    def __init__(self, unit, message="The operating hours at {} could not be found."):
         super().__init__(message.format(unit))
 
 
@@ -88,10 +88,13 @@ async def get_hours(session, unit_oid, menu):
 
                 index += 1
 
-            # This whole section could be one itertools block if not for closures
             elif blocks[index + 1] == "Closed":
+                # This whole section could be one itertools block if not for closures
                 hours.update({day: {"Closed": (nil, nil)}})
             else:
+                # For locations without available menus
+                begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
+                hours.update({day: {"Open": (begin, end)}})
                 index += 1
 
         index += 1
