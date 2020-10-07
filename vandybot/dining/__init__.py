@@ -92,6 +92,8 @@ class Dining(commands.Cog):
                                 embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                                 await ctx.send(embed=embed)
 
+                await self.reset()
+
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
         if meal not in unit_menu[day]:
