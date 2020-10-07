@@ -9,7 +9,8 @@ from .helper import *
 from vandybot.covid import Covid
 from vandybot.dining import Dining
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"))
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"),
+                   case_insensitive=True)
 
 
 @bot.event
