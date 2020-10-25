@@ -24,7 +24,7 @@ class Dining(commands.Cog):
                                        name=unit,
                                        help=f"Alias for ~menu {unit}.",
                                        usage=f"menu [day=today] [meal=next]\n"
-                                             f"~{unit} menu [location] [day] [meal=all]",
+                                             f"~{unit} menu [day] [meal=all]",
                                        hidden=True)
             command.after_invoke(self.menu_reset)
             self._bot.add_command(command)
@@ -96,7 +96,7 @@ class Dining(commands.Cog):
 
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         # Quality of life parse
-        if meal not in unit_menu[day]:
+        if day in unit_menu and meal not in unit_menu[day]:
             meal = {"Breakfast": "Brunch", "Brunch": "Breakfast"}.get(meal, meal)
 
         items = await menu.select(self._session, unit_menu, unit, day, meal)
