@@ -19,6 +19,7 @@ class Covid(commands.Cog):
         for index, header in enumerate(headers):
             embed.add_field(name=header, value="\n".join(row[index] for row in rows))
 
+        embed.set_footer(text="Weekly testing results are updated every Monday.")
         return embed
 
     @commands.command(name="covid",
