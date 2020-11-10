@@ -7,7 +7,7 @@ VandyBot is a Discord bot written in discord.py for interfacing with various ser
 All VandyBot commands are prefixed by a `~`. Current commands include:
 * `~covid` to retrieve recent statistics on COVID-19 test results and positive cases (e.g. `~covid`)
 * `~github` to return a link to this repository (e.g. `~github`)
-* `~hours` to obtain facility operating hours (e.g. `~hours commons tomorrow`)
+* `~hours` to obtain facility operating hours (e.g. `~hours central-library tomorrow`)
 * `~menu` to access dining menus (e.g. `~menu ebi lunch today`)
 * `~ping` to check VandyBot's latency (e.g. `~ping`)
 

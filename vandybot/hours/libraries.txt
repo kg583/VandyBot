@@ -1,0 +1,39 @@
+biomedical-library: Biomedical Library
+biomedical: Biomedical Library
+central-library: Central Library
+central: Central Library
+divinity-library: Divinity Library
+divinity: Divinity Library
+fine-arts-gallery: Fine Arts Gallery
+fine-arts-library: Fine Arts Gallery
+arts-gallery: Fine Arts Gallery
+arts-library: Fine Arts Gallery
+fine-arts: Fine Arts Gallery
+fine-art: Fine Arts Gallery
+arts: Fine Arts Gallery
+art: Fine Art Gallery
+art-gallery: Fine Arts Gallery
+law-library: Law Library
+law: Law Library
+management-library: Management Library
+management: Management Library
+music-library: Music Library
+music: Music Library
+peabody-library: Peabody Library
+peabody: Peabody Library
+science-and-engineering-library: Science and Engineering Library
+science-&-engineering-library: Science and Engineering Library
+science-and-engineering: Science and Engineering Library
+science-&-engineering: Science and Engineering Library
+science-engineering-library: Science and Engineering Library
+science-engineering: Science and Engineering Library
+science-library: Science and Engineering Library
+science: Science and Engineering Library
+engineering-library: Science and Engineering Library
+engineering: Science and Engineering Library
+stevenson-library: Science and Engineering Library
+stevenson: Science and Engineering Library
+special-collections: Special Collections and University Archives
+university-archives: Special Collections and University Archives
+collections: Special Collections and University Archives
+archives: Special Collections and University Archives

@@ -8,6 +8,7 @@ from .helper import *
 
 from vandybot.covid import Covid
 from vandybot.dining import Dining
+from vandybot.hours import Hours
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"),
                    case_insensitive=True)
@@ -40,6 +41,7 @@ async def on_command_error(ctx, error):
 
 
 @bot.command(name="github",
+             aliases=("code",),
              brief="VandyBot's GitHub repository.",
              help="Returns the link to VandyBot's GitHub repository.")
 async def github(ctx):
@@ -59,8 +61,9 @@ async def ping(ctx):
 
 async def main():
     # Establish cogs
-    bot.add_cog(Dining(bot))
     bot.add_cog(Covid(bot))
+    bot.add_cog(Dining(bot))
+    bot.add_cog(Hours(bot))
 
     # Tokens
     token = env_file.get()

@@ -34,12 +34,20 @@ def underline(string):
     return f"__{string}__"
 
 
+def code(string):
+    return f"`{string}`"
+
+
 async def fetch(session, url, params=None):
     async with session.get(url, params=params) as response:
         if response.status != 200:
             raise aiohttp.ClientConnectionError(f"Could not fetch from {url}.") from None
         text = await response.text()
         return text.encode().decode("unicode-escape")
+
+
+def get_oid(element):
+    return element.find("a")["onclick"].split("(")[1][:-2]
 
 
 async def jfetch(session, url, params=None):
@@ -83,9 +91,11 @@ class TooManySelections(Exception):
 class Day:
     def __init__(self, day="Sunday"):
         day = day.capitalize()
-        self._days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+        self._days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+                      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+
         try:
-            self._day = self._days.index(day)
+            self._day = self._days.index(day) % 7
         except ValueError:
             raise ValueError(f"{day} is not a valid day of the week.") from None
 

@@ -4,7 +4,6 @@ food_truck_url = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-men
 url = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
 header = {"Referer": url}
 
-max_selections = 5
 nil = datetime.time(0, 0)
 
 
@@ -26,16 +25,6 @@ class UnitNotFound(MenuError):
 class MenuNotAvailable(MenuNotFound):
     def __init__(self, unit, message="The menu for {} is not yet available."):
         super().__init__(unit, message)
-
-
-class HoursNotFound(Exception):
-    def __init__(self, unit, message="The operating hours at {} could not be found."):
-        super().__init__(message.format(unit))
-
-
-class HoursNotAvailable(HoursNotFound):
-    def __init__(self, message="The operating hours are not available for food trucks."):
-        super().__init__(message)
 
 
 async def food_truck_menu(session, unit):
@@ -91,19 +80,32 @@ async def get_hours(session, unit_oid, menu):
             elif blocks[index + 1] == "Closed":
                 # This whole section could be one itertools block if not for closures
                 hours.update({day: {"Closed": (nil, nil)}})
-            else:
-                # For locations without available menus
-                begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
-                hours.update({day: {"Open": (begin, end)}})
-                index += 1
 
         index += 1
 
     return hours
 
 
-def get_id(element):
-    return element.find("a")["onclick"].split("(")[1][:-2]
+async def get_items(session, menu_today, meal):
+    meal_oid = menu_today[meal]
+    response = await post(session, f"{url}/Menu/SelectMenu",
+                          data={"menuOid": meal_oid},
+                          headers=header)
+    soup = BeautifulSoup(response, "html.parser")
+    items = {}
+
+    # I don't think this default is ever used but just in case
+    current_item = "General Items"
+    for item in soup.find_all(class_=lambda c: c in ["cbo_nn_itemHover", "cbo_nn_itemGroupRow"]):
+        if item["class"][0] == "cbo_nn_itemGroupRow":
+            current_item = item.get_text()
+            if current_item == "None":
+                # Sometimes headers just aren't labeled and it makes me sad
+                current_item = meal
+        else:
+            items.update({current_item: items.get(current_item, []) + [item.get_text()]})
+
+    return dict(sorted(items.items()))
 
 
 async def get_menu(session, unit_oid):
@@ -111,16 +113,28 @@ async def get_menu(session, unit_oid):
                           data={"unitOid": unit_oid},
                           headers=header)
     soup = BeautifulSoup(response, "html.parser")
-    return {Day(day.find("header").get_text().split(",")[0]): {meal.get_text(): get_id(meal)
+    menu = {Day(day.find("header").get_text().split(",")[0]): {meal.get_text(): get_oid(meal)
                                                                for meal in
                                                                day.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3")}
             for day in soup.find_all(class_="card-block")}
+
+    # Nip empty menus in the bud
+    filtered = {}
+    for day in menu:
+        filtered.update({day: {}})
+        for meal in menu[day]:
+            # Pre-fetching is the only way
+            items = await get_items(session, menu[day], meal)
+            if items:
+                filtered[day].update({meal: items})
+
+    return filtered
 
 
 async def get_unit_oid(session, unit):
     response = await fetch(session, url)
     soup = BeautifulSoup(response, "html.parser")
-    units = {unit.get_text(): get_id(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
+    units = {unit.get_text(): get_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
     try:
         return units[unit]
     except KeyError:
@@ -152,32 +166,3 @@ def next_meal(hours, day):
 
     # If all else fails...
     return "all", day
-
-
-async def select(session, menu, unit, day, meal):
-    try:
-        meal_oid = menu[day][meal]
-    except KeyError:
-        raise MenuNotFound(unit) from None
-
-    response = await post(session, f"{url}/Menu/SelectMenu",
-                          data={"menuOid": meal_oid},
-                          headers=header)
-    soup = BeautifulSoup(response, "html.parser")
-    items = {}
-
-    # I don't think this default is ever used but just in case
-    current_item = "General Items"
-    for item in soup.find_all(class_=lambda c: c in ["cbo_nn_itemHover", "cbo_nn_itemGroupRow"]):
-        if item["class"][0] == "cbo_nn_itemGroupRow":
-            current_item = item.get_text()
-            if current_item == "None":
-                # Sometimes headers just aren't labeled and it makes me sad
-                current_item = meal
-        else:
-            items.update({current_item: items.get(current_item, []) + [item.get_text()]})
-
-    if not items:
-        raise MenuNotAvailable(unit) from None
-
-    return dict(sorted(items.items()))
