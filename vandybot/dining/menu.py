@@ -63,6 +63,12 @@ async def get_hours(session, unit_oid, menu):
                 # Map times to Times
                 begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
                 meal = list(menu[day].keys())[counters[day]]
+
+                # Empty menus are usually weekend breakfast
+                if day.day in ("Saturday", "Sunday") and meal == "Breakfast":
+                    counters[day] += 1
+                    meal = "Brunch"
+
                 if day in hours:
                     hours[day].update({meal: (begin, end)})
                 else:
@@ -113,22 +119,10 @@ async def get_menu(session, unit_oid):
                           data={"unitOid": unit_oid},
                           headers=header)
     soup = BeautifulSoup(response, "html.parser")
-    menu = {Day(day.find("header").get_text().split(",")[0]): {meal.get_text(): get_oid(meal)
+    return {Day(day.find("header").get_text().split(",")[0]): {meal.get_text(): get_oid(meal)
                                                                for meal in
                                                                day.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3")}
             for day in soup.find_all(class_="card-block")}
-
-    # Nip empty menus in the bud
-    filtered = {}
-    for day in menu:
-        filtered.update({day: {}})
-        for meal in menu[day]:
-            # Pre-fetching is the only way
-            items = await get_items(session, menu[day], meal)
-            if items:
-                filtered[day].update({meal: items})
-
-    return filtered
 
 
 async def get_unit_oid(session, unit):
@@ -157,7 +151,9 @@ def next_meal(hours, day):
                         return "Daily Offerings", day
                     # Otherwise look to tomorrow
                     return list(hours[day + 1].keys())[0], day + 1
+
                 current_meals = future_meals
+
             return current_meals[0], day
         elif day == tomorrow() and not any(now().time() <= block[1] for block in
                                            hours[today()].values()):

@@ -89,9 +89,8 @@ class Dining(commands.Cog):
             # Quality of life parse
             meal = {"Breakfast": "Brunch", "Brunch": "Breakfast"}.get(meal, meal)
 
-        try:
-            items = unit_menu[day][meal]
-        except KeyError:
+        items = await menu.get_items(self._session, unit_menu[day], meal)
+        if not items:
             raise menu.MenuNotAvailable(unit) from None
 
         if day == today():
