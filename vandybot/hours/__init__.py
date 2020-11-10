@@ -89,7 +89,7 @@ class Hours(commands.Cog):
         async def dispatcher(ctx, hour_arg, *args):
             if hour_arg.lower() != "hours":
                 if hour_arg.lower() != "menu":
-                    raise commands.BadArgument(f"Scope not provided. Use `~{unit} menu` or `~{unit} hours.")
+                    raise commands.BadArgument(f"Scope not provided. Use `~{unit} menu` or `~{unit} hours`.")
                 else:
                     # Yucky ew gross cross-cog call
                     await self._bot.get_cog("Dining").menu(ctx, unit, *args)
@@ -101,7 +101,7 @@ class Hours(commands.Cog):
     def hours_from_library(self, unit):
         async def dispatcher(ctx, hour_arg, *args):
             if hour_arg.lower() != "hours":
-                raise commands.BadArgument(f"Scope not provided. Use `~hours {unit}` or `~{unit} hours.")
+                raise commands.BadArgument(f"Scope not provided. Use `~hours {unit}` or `~{unit} hours`.")
             else:
                 await self.hours(ctx, unit, *args)
 
