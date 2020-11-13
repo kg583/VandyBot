@@ -27,6 +27,11 @@ class MenuNotAvailable(MenuNotFound):
         super().__init__(unit, message)
 
 
+class MealNotAvailable(MenuNotAvailable):
+    def __init__(self, unit, meal, message="No offerings for {} at {} could be found."):
+        super().__init__(unit, message.format(meal, "{}"))
+
+
 async def food_truck_menu(session, unit):
     response = await fetch(session, food_truck_url)
     soup = BeautifulSoup(response, "html.parser")
@@ -63,12 +68,6 @@ async def get_hours(session, unit_oid, menu):
                 # Map times to Times
                 begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
                 meal = list(menu[day].keys())[counters[day]]
-
-                # Empty menus are usually weekend breakfast
-                if day.day in ("Saturday", "Sunday") and meal == "Breakfast":
-                    counters[day] += 1
-                    meal = "Brunch"
-
                 if day in hours:
                     hours[day].update({meal: (begin, end)})
                 else:
@@ -92,8 +91,12 @@ async def get_hours(session, unit_oid, menu):
     return hours
 
 
-async def get_items(session, menu_today, meal):
-    meal_oid = menu_today[meal]
+async def get_items(session, menu_today, unit, meal):
+    try:
+        meal_oid = menu_today[meal]
+    except KeyError:
+        raise MealNotAvailable(unit, meal) from None
+
     response = await post(session, f"{url}/Menu/SelectMenu",
                           data={"menuOid": meal_oid},
                           headers=header)
@@ -114,15 +117,20 @@ async def get_items(session, menu_today, meal):
     return dict(sorted(items.items()))
 
 
-async def get_menu(session, unit_oid):
+async def get_menu(session, unit_oid, unit):
     response = await post(session, f"{url}/Unit/SelectUnitFromUnitsList",
                           data={"unitOid": unit_oid},
                           headers=header)
     soup = BeautifulSoup(response, "html.parser")
-    return {Day(day.find("header").get_text().split(",")[0]): {meal.get_text(): get_oid(meal)
-                                                               for meal in
-                                                               day.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3")}
-            for day in soup.find_all(class_="card-block")}
+    blocks = soup.find_all(class_="card-block")
+
+    menu = {Day(day.find("header").get_text().split(",")[0]): {} for day in blocks}
+    for day, day_soup in zip(menu.keys(), blocks):
+        menu[day].update({meal.get_text(): get_oid(meal)
+                          for meal in day_soup.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3")
+                          if not likely_empty(unit, day, meal.get_text())})
+
+    return menu
 
 
 async def get_unit_oid(session, unit):
@@ -133,6 +141,17 @@ async def get_unit_oid(session, unit):
         return units[unit]
     except KeyError:
         raise UnitNotFound from None
+
+
+def likely_empty(unit, day, meal):
+    def case(units, days, meals):
+        return (unit in units if units else True) and\
+               (day in days if days else True) and\
+               (meal in meals if meals else True)
+
+    # I probably shouldn't hard-code this
+    return case((), weekend, ("Breakfast",)) or\
+        case(("Rand Dining Center",), (Day("Friday"),), ("Dinner",))
 
 
 def next_meal(hours, day):
@@ -150,15 +169,14 @@ def next_meal(hours, day):
                         # Daily Offerings if possible
                         return "Daily Offerings", day
                     # Otherwise look to tomorrow
-                    return list(hours[day + 1].keys())[0], day + 1
+                    return first(hours[day + 1].keys()), day + 1
 
                 current_meals = future_meals
 
             return current_meals[0], day
-        elif day == tomorrow() and not any(now().time() <= block[1] for block in
-                                           hours[today()].values()):
+        elif day == tomorrow() and not any(now().time() <= block[1] for block in hours[today()].values()):
             # Check for tomorrow morning if it's late
-            return list(meals.keys())[0], day
+            return first(meals.keys()), day
 
     # If all else fails...
     return "all", day

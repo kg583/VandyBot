@@ -46,6 +46,13 @@ async def fetch(session, url, params=None):
         return text.encode().decode("unicode-escape")
 
 
+def first(iterable):
+    try:
+        return next(iter(iterable))
+    except StopIteration:
+        return None
+
+
 def get_oid(element):
     return element.find("a")["onclick"].split("(")[1][:-2]
 
@@ -142,6 +149,9 @@ def today():
 
 def tomorrow():
     return today() + 1
+
+
+weekend = (Day("Saturday"), Day("Sunday"))
 
 
 class Time(datetime.time):

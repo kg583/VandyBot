@@ -12,6 +12,7 @@ class Dining(commands.Cog):
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
+        self._list = reader(f"{_dir}/list")
 
         self._units = reader(f"{_dir}/units")
         self._food_trucks = reader(f"{_dir}/food_trucks")
@@ -66,12 +67,16 @@ class Dining(commands.Cog):
                 else:
                     unit_oid = await menu.get_unit_oid(self._session, unit)
                     for day in days:
-                        unit_menu = await menu.get_menu(self._session, unit_oid)
+                        unit_menu = await menu.get_menu(self._session, unit_oid, unit)
                         unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
                         if meals == ["next"]:
-                            # I feel like this should be separate for some reason
+                            # Next should not error out
                             meal, day = menu.next_meal(unit_hours, day)
-                            embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                            try:
+                                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
+                            except menu.MenuNotAvailable:
+                                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, "all")
+
                             await ctx.send(embed=embed)
                         else:
                             if meals == ["all"]:
@@ -89,7 +94,7 @@ class Dining(commands.Cog):
             # Quality of life parse
             meal = {"Breakfast": "Brunch", "Brunch": "Breakfast"}.get(meal, meal)
 
-        items = await menu.get_items(self._session, unit_menu[day], meal)
+        items = await menu.get_items(self._session, unit_menu[day], unit, meal)
         if not items:
             raise menu.MenuNotAvailable(unit) from None
 
@@ -118,7 +123,7 @@ class Dining(commands.Cog):
 
     def menu_list(self):
         embed = self.generate_embed(title="On-Campus Dining Locations", url=menu.url, color=DEFAULT_COLOR,
-                                    fields=reader(f"{_dir}/list"), inline=True)
+                                    fields=self._list, inline=True)
         embed.add_field(name="Additional Arguments",
                         value="Up to five total selections may be requested at once\ne.g. `rand ebi lunch dinner`\n"
                               "Arguments can be specified with different separators\ne.g. `local_java`\n"

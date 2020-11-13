@@ -11,6 +11,7 @@ class Hours(commands.Cog):
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
+        self._list = reader(f"{_dir}/list")
 
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
@@ -109,7 +110,7 @@ class Hours(commands.Cog):
 
     def hours_list(self):
         embed = self.generate_embed(title="On-Campus Facilities", url=None,
-                                    fields=reader(f"{_dir}/list"),
+                                    fields=self._list,
                                     footer="Posted hours may not reflect special events or unexpected closures.",
                                     inline=True)
         embed.add_field(name="Additional Arguments",

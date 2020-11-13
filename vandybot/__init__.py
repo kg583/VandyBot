@@ -26,7 +26,6 @@ async def on_message(message):
     if message.author != bot.user and (not debug.debugging or message.guild.id == debug.guild):
         await bot.process_commands(message)
 
-
 @bot.event
 async def on_command_error(ctx, error):
     embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
