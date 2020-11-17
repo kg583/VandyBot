@@ -66,12 +66,15 @@ async def get_hours(session, unit_oid, menu):
 
             if day in menu:
                 # Map times to Times
-                begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
-                meal = list(menu[day].keys())[counters[day]]
-                if day in hours:
-                    hours[day].update({meal: (begin, end)})
-                else:
-                    hours.update({day: {meal: (begin, end)}})
+                try:
+                    meal = list(menu[day].keys())[counters[day]]
+                    begin, end = Time(blocks[index + 1]), Time(blocks[index + 2])
+                    if day in hours:
+                        hours[day].update({meal: (begin, end)})
+                    else:
+                        hours.update({day: {meal: (begin, end)}})
+                except IndexError:
+                    pass
 
                 # Daily Offering hours span the day
                 if "Daily Offerings" in hours[day]:
