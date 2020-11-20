@@ -63,32 +63,46 @@ class Dining(commands.Cog):
                     menu_img = await menu.food_truck_menu(self._session, unit)
                     embed = Embed(title=unit, url=menu.food_truck_url, color=0x7ED321)
                     embed.set_image(url=menu_img)
+                    embed.set_footer(text="Food trucks are not available on-campus during winter break.")
                     await ctx.send(embed=embed)
                 else:
                     unit_oid = await menu.get_unit_oid(self._session, unit)
                     for day in days:
                         unit_menu = await menu.get_menu(self._session, unit_oid, unit)
-                        unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
-                        if meals == ["next"]:
-                            # Next should not error out
-                            meal, day = menu.next_meal(unit_hours, day)
-                            try:
-                                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
-                            except menu.MenuNotAvailable:
-                                embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, "all")
+                        if day not in unit_menu:
+                            raise menu.MenuNotFound(unit) from None
 
-                            await ctx.send(embed=embed)
-                        else:
-                            if meals == ["all"]:
-                                meals = unit_menu[day]
-                            for meal in meals:
+                        next_meal = menu.default_meal
+                        all_meals = list(unit_menu[day].keys())
+                        unit_hours = await menu.get_hours(self._session, unit_oid, unit_menu)
+
+                        if meals == ["all"]:
+                            meals = all_meals
+                        if "next" in meals:
+                            next_meal, day = menu.next_meal(unit_hours, day)
+                            if day not in unit_menu:
+                                raise menu.MenuNotFound(unit) from None
+
+                        index = 0
+                        while index < len(meals):
+                            meal = meals[index]
+                            if meal == "next":
+                                try:
+                                    embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, next_meal)
+                                    await ctx.send(embed=embed)
+                                except menu.MenuNotAvailable:
+                                    meals = all_meals
+                            else:
                                 embed = await self.menu_dispatch(unit_menu, unit_hours, unit, day, meal)
                                 await ctx.send(embed=embed)
+
+                            index += 1
 
                 await self.reset()
 
     async def menu_dispatch(self, unit_menu, unit_hours, unit, day, meal):
         if day not in unit_menu:
+            # Should not realistically get here ever
             raise menu.MenuNotFound(unit) from None
         elif meal not in unit_menu[day]:
             # Quality of life parse

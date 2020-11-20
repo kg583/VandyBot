@@ -4,6 +4,7 @@ food_truck_url = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-men
 url = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
 header = {"Referer": url}
 
+default_meal = "Daily Offerings"
 nil = datetime.time(0, 0)
 
 
@@ -98,6 +99,7 @@ async def get_items(session, menu_today, unit, meal):
     try:
         meal_oid = menu_today[meal]
     except KeyError:
+        # Should not realistically get here ever
         raise MealNotAvailable(unit, meal) from None
 
     response = await post(session, f"{url}/Menu/SelectMenu",
@@ -163,14 +165,14 @@ def next_meal(hours, day):
         if day == today():
             # Check for something right now
             current_meals = sorted([meal for meal in meals if meals[meal][0] <= now().time() <= meals[meal][1]],
-                                   key=lambda meal: meal == "Daily Offerings")
-            if not current_meals or current_meals[0] == "Daily Offerings":
+                                   key=lambda meal: meal == default_meal)
+            if not current_meals or current_meals[0] == default_meal:
                 # Check for something later today
                 future_meals = [meal for meal in meals if now().time() < meals[meal][0]]
                 if not future_meals:
-                    if "Daily Offerings" in current_meals:
+                    if default_meal in current_meals:
                         # Daily Offerings if possible
-                        return "Daily Offerings", day
+                        return default_meal, day
                     # Otherwise look to tomorrow
                     return first(hours[day + 1].keys()), day + 1
 

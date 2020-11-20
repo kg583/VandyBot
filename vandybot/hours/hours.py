@@ -48,7 +48,7 @@ async def dining_hours(session, unit_oid):
 
         index += 1
 
-    return hours, "Some facilities may be open to students between meal-serving periods."
+    return hours, "Some facilities may have limited access during winter break."
 
 
 async def dining_unit_oid(session, unit):

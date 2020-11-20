@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"),
 @bot.event
 async def on_ready():
     print("VandyBot has connected. Awaiting command requests...")
-    activity = "Type ~help for usage!" if not debug.debugging else "Currently undergoing maintenance."
+    activity = "Type ~help for usage!" if not debug.debugging else "Currently undergoing maintenance"
     await bot.change_presence(activity=Activity(type=ActivityType.playing, name=activity))
 
 
