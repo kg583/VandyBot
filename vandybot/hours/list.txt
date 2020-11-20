@@ -3,3 +3,4 @@ Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kiss
 Retail Dining: `aryehs`\n`grins`\n`local-java`\n`kissam`\n`suzies-alumni`\n`suzies-stevenson`
 Libraries: `biomedical`\n`central`\n`divinity`\n`fine-arts`\n`law`\n`management`\n`music`\n`peabody`\n`science-and-engineering`\n`university-archives`
 PickUpSpots: `blair-pickup`\n`branscomb-pickup`
+Post Offices: `station-b`

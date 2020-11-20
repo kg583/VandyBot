@@ -5,6 +5,8 @@ dining_header = {"Referer": dining_url}
 
 library_url = "https://www.library.vanderbilt.edu/hours.php"
 
+post_office_url = "https://www.vanderbilt.edu/mailservices/contact-us/locations-hours-services.php"
+
 nil = datetime.time(0, 0)
 
 

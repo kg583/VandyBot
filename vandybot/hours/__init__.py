@@ -15,6 +15,9 @@ class Hours(commands.Cog):
 
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
+        self._post_offices = reader(f"{_dir}/post_offices")
+
+        self._post_office_hours = reader(f"{_dir}/post_office_hours")
 
         # Swapped unit commands
         for loc in self._dining:
@@ -69,6 +72,12 @@ class Hours(commands.Cog):
                     unit_oid = await hours.dining_unit_oid(self._session, loc)
                     all_hours, footer = await hours.dining_hours(self._session, unit_oid)
                     url = hours.library_url
+                elif loc in self._post_offices.values():
+                    all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
+                                 if " - " in time else ["Closed"]
+                                 for day, time in self._post_office_hours.items()}
+                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays."
+                    url = hours.post_office_url
                 else:
                     raise hours.UnitNotFound(loc)
 
@@ -115,7 +124,7 @@ class Hours(commands.Cog):
                                     inline=True)
         embed.add_field(name="Additional Arguments",
                         value="Up to five total selections may be requested at once\ne.g. `commons tomorrow monday`\n"
-                              "Arguments can be specified with different separators\ne.g. `kissam_munchie`\n"
+                              "Arguments can be specified with different separators\ne.g. `post_office`\n"
                               "To use spaces, wrap the entire name in quotes\ne.g. `\"biomedical library\"`\n"
                               "Alternative names are also permitted\n"
                               "e.g. `stevenson` for `science-and-engineering-library`",
@@ -136,20 +145,24 @@ class Hours(commands.Cog):
                     # Is a library?
                     locs.append(self._libraries[arg])
                 except KeyError:
-                    # Is a day?
-                    if arg == "today":
-                        days.append(today())
-                    elif arg == "tomorrow":
-                        days.append(tomorrow())
-                    else:
-                        try:
-                            days.append(Day(arg))
-                        except ValueError:
-                            if arg == "library":
-                                # He he
-                                raise commands.BadArgument("Which one, dumbass?") from None
-                            else:
-                                raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
+                    # Is the post office?
+                    try:
+                        locs.append(self._post_offices[arg])
+                    except KeyError:
+                        # Is a day?
+                        if arg == "today":
+                            days.append(today())
+                        elif arg == "tomorrow":
+                            days.append(tomorrow())
+                        else:
+                            try:
+                                days.append(Day(arg))
+                            except ValueError:
+                                if arg == "library":
+                                    # He he
+                                    raise commands.BadArgument("Which one, smartass?") from None
+                                else:
+                                    raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
         if not locs:
             raise commands.BadArgument("No facility was provided.") from None
