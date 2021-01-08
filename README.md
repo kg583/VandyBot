@@ -1,6 +1,6 @@
 # VandyBot [![inviteme](https://img.shields.io/static/v1?style=flat&logo=discord&logoColor=FFF&label=&message=invite&color=7289DA)](https://discord.com/api/oauth2/authorize?client_id=748705643757568080&permissions=247872&scope=bot) [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/kg583/VandyBot.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kg583/VandyBot/context:python)
 
-VandyBot is a Discord bot written in discord.py for interfacing with various services at Vanderbilt University. Currently, supported services include Campus Dining & the COVID-19 Dashboard, but additional features including AnchorLink acess are in the works.
+VandyBot is a Discord bot written in discord.py for interfacing with various services at Vanderbilt University. Currently, supported services include Campus Dining & the COVID-19 Dashboard, but additional features including AnchorLink access are in the works.
 
 ## Usage
 
