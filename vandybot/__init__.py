@@ -87,4 +87,3 @@ async def main():
     print("VandyBot is connecting...")
     await bot.login(tokens["BOT_TOKEN"], bot=True)
     await bot.connect(reconnect=True)
-    print("VandyBot has connected.")

@@ -98,7 +98,7 @@ def reader(filename):
 async def schedule(coro, times):
     times = [time_on(now(), time) for time in times]
     times.append(times[0] + datetime.timedelta(days=1))
-    times_until = [now() - time for time in times]
+    times_until = [time - now() for time in times]
     await asyncio.sleep(min(time_until for time_until in times_until if time_until.days > 0).seconds)
     return await coro
 
@@ -153,6 +153,7 @@ class Day:
     def __iadd__(self, other):
         self.day += int(other)
         self.day %= 7
+        return self
 
     def __sub__(self, other):
         return Day(self.DAYS[(self.day - int(other)) % 7])
@@ -160,6 +161,7 @@ class Day:
     def __isub__(self, other):
         self.day -= int(other)
         self.day %= 7
+        return self
 
 
 def today():

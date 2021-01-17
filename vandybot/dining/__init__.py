@@ -50,7 +50,7 @@ class Meal:
         self.color = self.COLORS.get(self.name, DEFAULT_COLOR)
         self.day = day
 
-        self.opens = Time.MIN
+        self.opens = Time.MAX
         self.closes = Time.MAX
         self.hours_status = self.HOURS_NOT_FOUND
 
@@ -103,14 +103,13 @@ class Dining(commands.Cog):
     # URL stuff
     FOOD_TRUCK_URL = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-menus/"
     MENU_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
-    MENU_HEADER = {"Referer": MENU_URL}
 
     SCHEDULE = [datetime.time(4, 20)]
 
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
-        self._list = reader(f"{_dir}/list")
+        self._cookie = "1fsj02xby4wkrvdaga5ba22f"
 
         self._units = reader(f"{_dir}/units")
         self._unit_oids = reader(f"{_dir}/unit_oids")
@@ -118,7 +117,13 @@ class Dining(commands.Cog):
         self._food_trucks = reader(f"{_dir}/food_trucks")
         self._meals = reader(f"{_dir}/meals")
 
+        self._list = reader(f"{_dir}/list")
         self._menu = {}
+
+    @property
+    def header(self):
+        return {"Referer": self.MENU_URL,
+                "Cookie": f"CBORD.netnutrition2=NNexternalID=vucampusdining; ASP.NET_SessionId={self._cookie}"}
 
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=256):
@@ -126,8 +131,8 @@ class Dining(commands.Cog):
         embed.set_thumbnail(url=f"{github_raw}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
             if len(text) > max_len:
-                splitter = text[max_len:].find(", ")
-                text = text[:splitter + max_len] + ", ..."
+                splitter = text[:max_len].rfind(", ")
+                text = text[:splitter] + ", ..."
             embed.add_field(name=header, value=text, inline=inline)
 
         return embed
@@ -156,6 +161,16 @@ class Dining(commands.Cog):
         if not relaxed:
             return self.find_next_meal(unit, start, relaxed=True)
 
+    async def get_cookie(self):
+        async with self._session.get(self.MENU_URL, params={"Access-Control-Allow-Credentials": "true"}) as response:
+            if response.status != 200:
+                raise aiohttp.ClientConnectionError(f"Could not fetch cookie from {self.MENU_URL}.") from None
+
+            try:
+                self._cookie = response.cookies["ASP.NET_SessionId"].coded_value
+            except KeyError:
+                pass
+
     async def get_food_truck_menu(self, unit):
         response = await fetch(self._session, self.FOOD_TRUCK_URL)
         soup = BeautifulSoup(response, "html.parser")
@@ -173,7 +188,7 @@ class Dining(commands.Cog):
     async def get_items(self, meal):
         response = await post(self._session, f"{self.MENU_URL}/Menu/SelectMenu",
                               data={"menuOid": meal.oid},
-                              headers=self.MENU_HEADER)
+                              headers=self.header)
         soup = BeautifulSoup(response, "html.parser")
         items = {}
 
@@ -196,12 +211,13 @@ class Dining(commands.Cog):
                                                                  for meal in self._meals.values()]))
                                          for day in Day.DAYS[:7]])
                       for unit in self._units.values()}
+        await self.get_cookie()
 
-        for unit in self._units.values():
+        for unit in set(self._units.values()):
             unit_oid = self._unit_oids[unit]
             response = await post(self._session, f"{self.MENU_URL}/Unit/SelectUnitFromUnitsList",
                                   data={"unitOid": unit_oid},
-                                  headers=self.MENU_HEADER)
+                                  headers=self.header)
             soup = BeautifulSoup(response, "html.parser")
             blocks = soup.find_all(class_="card-block")
 
@@ -219,7 +235,7 @@ class Dining(commands.Cog):
                 # Get the times
                 response = await post(self._session, f"{self.MENU_URL}/Unit/GetHoursOfOperationMarkup",
                                       data={"unitOid": unit_oid},
-                                      headers=self.MENU_HEADER)
+                                      headers=self.header)
                 soup = BeautifulSoup(response, "html.parser")
                 unit_hours = {Day(day): [] for day in Day.DAYS[:7]}
 
@@ -241,12 +257,17 @@ class Dining(commands.Cog):
                 # Match the times
                 for day in self._menu[unit]:
                     meals = self._menu[unit][day]
-                    need_hours = [meal for name, meal in meals.items() if name != Meal.DEFAULT and
-                                  meal.items_status != Meal.ITEMS_NOT_FOUND]
+                    need_hours = [meal for name, meal in meals.items() if meal.items_status != Meal.ITEMS_NOT_FOUND]
+                    if need_hours != [Meal.DEFAULT]:
+                        try:
+                            need_hours.remove(Meal.DEFAULT)
+                        except ValueError:
+                            pass
+
                     hour_index = 0
                     for meal in need_hours:
                         if len(need_hours) <= len(unit_hours[day]) or \
-                                len(need_hours) > len(unit_hours[day]) and not meal.empty:
+                                len(need_hours) > len(unit_hours[day]) and meal.items_status == Meal.ITEMS_AVAILABLE:
                             # There are enough hours to go around
                             try:
                                 meal.opens, meal.closes = unit_hours[day][hour_index][:2]
@@ -255,6 +276,9 @@ class Dining(commands.Cog):
                             except ValueError:
                                 # Is a closed
                                 meal.hours_status = Meal.CLOSED
+
+                        if hour_index >= len(unit_hours[day]):
+                            break
 
                     # Set Daily Offerings hours
                     if need_hours:
@@ -268,14 +292,14 @@ class Dining(commands.Cog):
             await self.reset()
 
         # Schedule the next fetch
-        self._bot.loop.create_task(schedule(await self.get_menu(), self.SCHEDULE))
+        self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
 
     async def startup(self):
         await self.get_menu()
 
     async def reset(self):
         # Because POST requests are bad and should feel bad
-        await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.MENU_HEADER)
+        await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.header)
 
     @commands.command(name="menu",
                       brief="Gets menus from on-campus dining locations.",
@@ -309,6 +333,8 @@ class Dining(commands.Cog):
                         for meal in meals:
                             if meal == "next":
                                 meal = self.find_next_meal(unit, day)
+                                if meal is None:
+                                    raise MenuNotFound(unit) from None
                             else:
                                 meal = self._menu[unit][day][meal]
 
@@ -394,7 +420,3 @@ class Dining(commands.Cog):
             raise TooManySelections from None
 
         return units, days, meals
-
-    @menu.after_invoke
-    async def menu_reset(self, *_):
-        await self.reset()
