@@ -86,7 +86,7 @@ class Meal:
             else:
                 return f"OPEN on {self.day}"
         elif self.hours_status == self.CLOSED:
-            # This one shouldn't happen unless NetNutrition is dumb
+            # This one shouldn't happen often
             if self.day == today():
                 return "CLOSED today"
             elif self.day == tomorrow():

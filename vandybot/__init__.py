@@ -28,7 +28,6 @@ async def on_message(message):
         await bot.process_commands(message)
 
 
-"""
 @bot.event
 async def on_command_error(ctx, error):
     embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
@@ -40,7 +39,6 @@ async def on_command_error(ctx, error):
 
         embed.add_field(name=name, value=value)
         await ctx.send(embed=embed)
-"""
 
 
 @bot.command(name="github",
