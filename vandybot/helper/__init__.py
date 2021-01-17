@@ -1,9 +1,15 @@
 import aiohttp
+import asyncio
 from bs4 import BeautifulSoup
+from collections import OrderedDict
 import datetime
+
 
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
+
+# Convenient but clashes a bit
+now = datetime.datetime.today
 
 # GitHub directory
 github_raw = "https://raw.githubusercontent.com/kg583/VandyBot/master"
@@ -46,15 +52,15 @@ async def fetch(session, url, params=None):
         return text.encode().decode("unicode-escape")
 
 
+def find_oid(element):
+    return element.find("a")["onclick"].split("(")[1][:-2]
+
+
 def first(iterable):
     try:
         return next(iter(iterable))
     except StopIteration:
         return None
-
-
-def get_oid(element):
-    return element.find("a")["onclick"].split("(")[1][:-2]
 
 
 async def jfetch(session, url, params=None):
@@ -89,6 +95,24 @@ def reader(filename):
     return entries
 
 
+async def schedule(coro, times):
+    times = [time_on(now(), time) for time in times]
+    times.append(times[0] + datetime.timedelta(days=1))
+    times_until = [now() - time for time in times]
+    await asyncio.sleep(min(time_until for time_until in times_until if time_until.days > 0).seconds)
+    return await coro
+
+
+def time_on(date, time):
+    return datetime.datetime(*date.date().timetuple()[:3], time.hour, time.minute, time.second)
+
+
+def to_time(time):
+    hour = time[:-2] + (":00" if ":" not in time else "")
+    period = time[-2:].upper()
+    return Time(hour + " " + period)
+
+
 class TooManySelections(Exception):
     def __init__(self, max_count=max_returns, message="You have requested more than {} selections in one command.\n"
                                                       "Please separate your requests and try again."):
@@ -96,65 +120,64 @@ class TooManySelections(Exception):
 
 
 class Day:
+    DAYS = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+            "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+            "U", "M", "T", "W", "R", "F", "S")
+
     def __init__(self, day="Sunday"):
         day = day.capitalize()
-        self._days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-                      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 
         try:
-            self._day = self._days.index(day) % 7
+            self.day = self.DAYS.index(day) % 7
         except ValueError:
             raise ValueError(f"{day} is not a valid day of the week.") from None
 
     def __hash__(self):
-        return self._day
+        return self.day
 
     def __int__(self):
-        return self._day
+        return self.day
 
     def __str__(self):
-        return self._days[self._day]
-
-    @property
-    def day(self):
-        return str(self)
-
-    def is_day(self, day):
-        return day in self._days
+        return self.DAYS[self.day]
 
     def __eq__(self, other):
-        return int(self) == int(other)
-
-    def __ne__(self, other):
-        return int(self) != int(other)
+        try:
+            return int(self) == int(other)
+        except ValueError:
+            return False
 
     def __add__(self, other):
-        return Day(self._days[(self._day + int(other)) % 7])
+        return Day(self.DAYS[(self.day + int(other)) % 7])
 
     def __iadd__(self, other):
-        self._day += int(other)
-        self._day %= 7
+        self.day += int(other)
+        self.day %= 7
 
     def __sub__(self, other):
-        return Day(self._days[(self._day - int(other)) % 7])
+        return Day(self.DAYS[(self.day - int(other)) % 7])
 
     def __isub__(self, other):
-        self._day -= int(other)
-        self._day %= 7
+        self.day -= int(other)
+        self.day %= 7
 
 
 def today():
-    return Day(datetime.datetime.today().strftime("%A"))
+    return Day(now().strftime("%A"))
 
 
 def tomorrow():
     return today() + 1
 
 
+week = tuple(map(Day, Day.DAYS))
 weekend = (Day("Saturday"), Day("Sunday"))
 
 
 class Time(datetime.time):
+    MIN = datetime.time(0, 0)
+    MAX = datetime.time(23, 59)
+
     def __new__(cls, time="12:00 AM"):
         split = time.split(":")
         return super().__new__(cls, (int(split[0]) % 12) + 12 * (time.split()[1].upper() == "PM"),
@@ -164,6 +187,3 @@ class Time(datetime.time):
         return "{}:{} {}".format(self.hour % 12 + 12 * (self.hour % 12 == 0),
                                  str(self.minute).zfill(2),
                                  "AM" if self.hour < 12 else "PM")
-
-
-now = datetime.datetime.today

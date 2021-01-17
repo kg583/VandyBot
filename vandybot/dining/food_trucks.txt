@@ -1,12 +1,26 @@
+buns: Buns on the Run
 buns-on-the-run: Buns on the Run
 califarmia: Califarmia
 chicken-shack: Chicken Shack Express
 chicken-shack-express: Chicken Shack Express
 culinary-creations: Creative Culinary Creations
 creative-culinary-creations: Creative Culinary Creations
+delicias: Delicias Colombianas
+colombianas: Delicias Colombianas
+delicias-colombianas: Delicias Colombianas
 florinda: Florinda’s Cocina
-florindas: Florinda's Cocina
+florindas: Florinda’s Cocina
 florindas-cocina: Florinda’s Cocina
+jay: Jay’s Chicago
+chicago: Jay’s Chicago
+jay-chicago: Jay’s Chicago
+jays-chicago: Jay’s Chicago
+chicken-and-waffles: Nashville Chicken & Waffles
+chicken-&-waffles: Nashville Chicken & Waffles
+chicken-waffles: Nashville Chicken & Waffles
+nashville-chicken-and-waffles: Nashville Chicken & Waffles
+nashville-chicken-&-waffles: Nashville Chicken & Waffles
+nashville-chicken-waffles: Nashville Chicken & Waffles
 pie-town: Pie Town Tacos
 pie-town-taco: Pie Town Tacos
 pie-town-tacos: Pie Town Tacos

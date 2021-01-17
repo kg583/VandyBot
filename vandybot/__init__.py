@@ -12,6 +12,7 @@ from vandybot.hours import Hours
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"),
                    case_insensitive=True)
+tokens = env_file.get()
 
 
 @bot.event
@@ -27,6 +28,7 @@ async def on_message(message):
         await bot.process_commands(message)
 
 
+"""
 @bot.event
 async def on_command_error(ctx, error):
     embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
@@ -38,6 +40,7 @@ async def on_command_error(ctx, error):
 
         embed.add_field(name=name, value=value)
         await ctx.send(embed=embed)
+"""
 
 
 @bot.command(name="github",
@@ -59,18 +62,29 @@ async def ping(ctx):
     await ctx.send(f"~pong ({bot.latency * 1000:.3f}ms)")
 
 
-async def main():
+def startup():
+    print("VandyBot is starting up...")
+
     # Establish cogs
     bot.add_cog(Covid(bot))
     bot.add_cog(Dining(bot))
     bot.add_cog(Hours(bot))
 
-    # Tokens
-    token = env_file.get()
-    if "DEBUGGING" in token:
-        debug.debugging = token["DEBUGGING"] == "True"
+    # Read tokens
+    if "DEBUGGING" in tokens:
+        debug.debugging = tokens["DEBUGGING"] == "True"
         print(f"DEBUG MODE == {debug.debugging}")
-    if "DEBUG_GUILD_ID" in token:
-        debug.guild = int(token["DEBUG_GUILD_ID"])
+    if "DEBUG_GUILD_ID" in tokens:
+        debug.guild = int(tokens["DEBUG_GUILD_ID"])
 
-    await bot.start(token["BOT_TOKEN"])
+
+async def main():
+    # Start cogs
+    for cog in bot.cogs:
+        await bot.get_cog(cog).startup()
+
+    # Connect
+    print("VandyBot is connecting...")
+    await bot.login(tokens["BOT_TOKEN"], bot=True)
+    await bot.connect(reconnect=True)
+    print("VandyBot has connected.")

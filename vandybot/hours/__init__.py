@@ -2,12 +2,34 @@ from discord import Embed
 from discord.ext import commands
 
 from ..helper import *
-from . import hours
 
 _dir = "vandybot/hours"
 
 
+# Errors
+class HoursError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class HoursNotFound(HoursError):
+    def __init__(self, unit, message="The operating hours at {} could not be found."):
+        super().__init__(message.format(unit))
+
+
+class UnitNotFound(HoursError):
+    def __init__(self, unit, message="{} could not be found."):
+        super().__init__(message.format(unit))
+
+
+# Main Cog
 class Hours(commands.Cog):
+    # URL stuff
+    DINING_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
+    DINING_HEADER = {"Referer": DINING_URL}
+    LIBRARY_URL = "https://www.library.vanderbilt.edu/hours.php"
+    POST_OFFICE_URL = "https://www.vanderbilt.edu/mailservices/contact-us/locations-hours-services.php"
+
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
@@ -49,9 +71,60 @@ class Hours(commands.Cog):
 
         return embed
 
+    async def get_dining_hours(self, unit_oid):
+        response = await post(self._session, f"{self.DINING_URL}/Unit/GetHoursOfOperationMarkup",
+                              data={"unitOid": unit_oid},
+                              headers=self.DINING_HEADER)
+        soup = BeautifulSoup(response, "html.parser")
+        blocks = [Day(time) if time in Day.DAYS else time for time in map(BeautifulSoup.get_text, soup.find_all("td"))]
+        index = 0
+        hours = {}
+
+        # Assign time blocks to meals
+        while index < len(blocks):
+            day = blocks[index]
+            # Block elements are either Days or times
+            if isinstance(day, Day):
+                if blocks[index + 1].lower() == "closed":
+                    # This whole section could be one itertools block if not for closures
+                    hours.update({day: ["Closed"]})
+                else:
+                    hours.update({day: hours.get(day, []) + [(Time(blocks[index + 1]), Time(blocks[index + 2]))]})
+                    index += 1
+
+            index += 1
+
+        return hours, "Reported hours do not necessarily reflect unexpected closures or holidays."
+
+    async def get_dining_unit_oid(self, unit):
+        response = await fetch(self._session, self.DINING_URL)
+        soup = BeautifulSoup(response, "html.parser")
+        units = {unit.get_text(): find_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
+        try:
+            return units[unit]
+        except KeyError:
+            raise UnitNotFound(unit) from None
+
+    async def get_library_hours(self, library):
+        response = await fetch(self._session, self.LIBRARY_URL)
+        soup = BeautifulSoup(response, "html.parser")
+
+        blocks = soup.find_all("table", class_="table hours-table")
+        footers = {block.find("th").get_text(): block.find("td").get_text().split("  ")[0] for block in blocks}
+        hours = {block.find("th").get_text(): {
+            Day(day.get_text().strip()[:3]): [tuple(to_time(span) for span in time.get_text().strip().split("-"))]
+            if time.get_text().strip().lower() != "closed" else ["Closed"]
+            for day, time in zip(block.find_all("th")[1:], block.find_all("td")[1:])}
+            for block in blocks}
+
+        return hours[library], footers[library]
+
+    async def startup(self):
+        pass
+
     async def reset(self):
         # Because POST requests are bad and should feel bad
-        await self._session.post(hours.dining_url + "/Home/ResetSelections", headers=hours.dining_header)
+        await self._session.post(self.DINING_URL + "/Home/ResetSelections", headers=self.DINING_HEADER)
 
     @commands.command(name="hours",
                       brief="Gets the operating hours for various on-campus facilities.",
@@ -66,26 +139,26 @@ class Hours(commands.Cog):
             locs, days = self.hours_parse(args)
             for loc in locs:
                 if loc in self._libraries.values():
-                    all_hours, footer = await hours.library_hours(self._session, loc)
-                    url = hours.dining_url
+                    all_hours, footer = await self.get_library_hours(loc)
+                    url = self.DINING_URL
                 elif loc in self._dining.values():
-                    unit_oid = await hours.dining_unit_oid(self._session, loc)
-                    all_hours, footer = await hours.dining_hours(self._session, unit_oid)
-                    url = hours.library_url
+                    unit_oid = await self.get_dining_unit_oid(loc)
+                    all_hours, footer = await self.get_dining_hours(unit_oid)
+                    url = self.LIBRARY_URL
                 elif loc in self._post_offices.values():
                     all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
                                  if " - " in time else ["Closed"]
                                  for day, time in self._post_office_hours.items()}
                     footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays."
-                    url = hours.post_office_url
+                    url = self.POST_OFFICE_URL
                 else:
-                    raise hours.UnitNotFound(loc)
+                    raise UnitNotFound(loc)
 
                 for day in days:
                     try:
                         loc_hours = all_hours[day]
                     except KeyError:
-                        raise hours.HoursNotFound(loc)
+                        raise HoursNotFound(loc)
 
                     if "Closed" in loc_hours:
                         fields = {f"Hours on {day}": "CLOSED"}
