@@ -74,6 +74,8 @@ def startup():
         print(f"DEBUG MODE == {debug.debugging}")
     if "DEBUG_GUILD_ID" in tokens:
         debug.guild = int(tokens["DEBUG_GUILD_ID"])
+    if "ASP_NET_SESSION_ID" in tokens:
+        bot.get_cog("Dining").get_cookie(default=tokens["ASP_NET_SESSION_ID"])
 
 
 async def main():

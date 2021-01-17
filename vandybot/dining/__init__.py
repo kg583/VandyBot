@@ -103,13 +103,13 @@ class Dining(commands.Cog):
     # URL stuff
     FOOD_TRUCK_URL = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-menus/"
     MENU_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
+    MENU_HEADER = {"Referer": MENU_URL}
 
     SCHEDULE = [datetime.time(4, 20)]
 
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
-        self._cookie = "1fsj02xby4wkrvdaga5ba22f"
 
         self._units = reader(f"{_dir}/units")
         self._unit_oids = reader(f"{_dir}/unit_oids")
@@ -119,11 +119,6 @@ class Dining(commands.Cog):
 
         self._list = reader(f"{_dir}/list")
         self._menu = {}
-
-    @property
-    def header(self):
-        return {"Referer": self.MENU_URL,
-                "Cookie": f"CBORD.netnutrition2=NNexternalID=vucampusdining; ASP.NET_SessionId={self._cookie}"}
 
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=256):
@@ -161,15 +156,21 @@ class Dining(commands.Cog):
         if not relaxed:
             return self.find_next_meal(unit, start, relaxed=True)
 
-    async def get_cookie(self):
+    async def get_cookie(self, default=""):
+        cookies = {"CBORD.netnutrition2": "NNexternalID=vucampusdining",
+                   "ASP.NET_SessionId": default}
         async with self._session.get(self.MENU_URL, params={"Access-Control-Allow-Credentials": "true"}) as response:
             if response.status != 200:
                 raise aiohttp.ClientConnectionError(f"Could not fetch cookie from {self.MENU_URL}.") from None
 
             try:
-                self._cookie = response.cookies["ASP.NET_SessionId"].coded_value
+                # Make new session with session cookie
+                cookies["ASP.NET_SessionId"] = response.cookies["ASP.NET_SessionId"].coded_value
+                self._session = aiohttp.ClientSession(cookies=cookies)
             except KeyError:
-                pass
+                if default:
+                    # Fallback to default
+                    self._session = aiohttp.ClientSession(cookies=cookies)
 
     async def get_food_truck_menu(self, unit):
         response = await fetch(self._session, self.FOOD_TRUCK_URL)
@@ -188,7 +189,7 @@ class Dining(commands.Cog):
     async def get_items(self, meal):
         response = await post(self._session, f"{self.MENU_URL}/Menu/SelectMenu",
                               data={"menuOid": meal.oid},
-                              headers=self.header)
+                              headers=self.MENU_HEADER)
         soup = BeautifulSoup(response, "html.parser")
         items = {}
 
@@ -207,17 +208,17 @@ class Dining(commands.Cog):
 
     async def get_menu(self):
         # Clear out current menu
-        self._menu = {unit: OrderedDict([(Day(day), OrderedDict([(meal, Meal(meal, day))
-                                                                 for meal in self._meals.values()]))
-                                         for day in Day.DAYS[:7]])
-                      for unit in self._units.values()}
+        menu = {unit: OrderedDict([(Day(day), OrderedDict([(meal, Meal(meal, day))
+                                                           for meal in self._meals.values()]))
+                                   for day in Day.DAYS[:7]])
+                for unit in self._units.values()}
         await self.get_cookie()
 
         for unit in set(self._units.values()):
             unit_oid = self._unit_oids[unit]
             response = await post(self._session, f"{self.MENU_URL}/Unit/SelectUnitFromUnitsList",
                                   data={"unitOid": unit_oid},
-                                  headers=self.header)
+                                  headers=self.MENU_HEADER)
             soup = BeautifulSoup(response, "html.parser")
             blocks = soup.find_all(class_="card-block")
 
@@ -230,12 +231,12 @@ class Dining(commands.Cog):
                         meal.oid = find_oid(meal_soup)
                         meal.items = await self.get_items(meal)
                         meal.items_status = Meal.ITEMS_AVAILABLE if meal.items else Meal.ITEMS_NOT_LISTED
-                        self._menu[unit][day][meal.name] = meal
+                        menu[unit][day][meal.name] = meal
 
                 # Get the times
                 response = await post(self._session, f"{self.MENU_URL}/Unit/GetHoursOfOperationMarkup",
                                       data={"unitOid": unit_oid},
-                                      headers=self.header)
+                                      headers=self.MENU_HEADER)
                 soup = BeautifulSoup(response, "html.parser")
                 unit_hours = {Day(day): [] for day in Day.DAYS[:7]}
 
@@ -255,8 +256,8 @@ class Dining(commands.Cog):
                             unit_hours[day][-1].append(block)
 
                 # Match the times
-                for day in self._menu[unit]:
-                    meals = self._menu[unit][day]
+                for day in menu[unit]:
+                    meals = menu[unit][day]
                     need_hours = [meal for name, meal in meals.items() if meal.items_status != Meal.ITEMS_NOT_FOUND]
                     if need_hours != [Meal.DEFAULT]:
                         try:
@@ -282,13 +283,14 @@ class Dining(commands.Cog):
 
                     # Set Daily Offerings hours
                     if need_hours:
-                        default = self._menu[unit][day][Meal.DEFAULT]
+                        default = menu[unit][day][Meal.DEFAULT]
                         default.opens = min(meal.opens for meal in need_hours)
                         default.closes = max(meal.closes for meal in need_hours)
             except AttributeError:
                 # No menus are available
                 pass
 
+            self._menu = menu
             await self.reset()
 
         # Schedule the next fetch
@@ -299,7 +301,7 @@ class Dining(commands.Cog):
 
     async def reset(self):
         # Because POST requests are bad and should feel bad
-        await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.header)
+        await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.MENU_HEADER)
 
     @commands.command(name="menu",
                       brief="Gets menus from on-campus dining locations.",
@@ -345,8 +347,6 @@ class Dining(commands.Cog):
 
                             embed = self.menu_dispatch(unit, meal)
                             await ctx.send(embed=embed)
-
-                await self.reset()
 
     def menu_dispatch(self, unit, meal):
         if meal.items_status == Meal.ITEMS_NOT_FOUND:
