@@ -294,8 +294,7 @@ class Dining(commands.Cog):
 
             # Match the times
             for day in unit_menu:
-                meals = unit_menu[day]
-                need_hours = [meal for name, meal in meals.items()
+                need_hours = [meal for name, meal in unit_menu[day].items()
                               if meal.items_status != Meal.ITEMS_NOT_FOUND and meal.name != Meal.DEFAULT]
                 need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
 
@@ -362,7 +361,7 @@ class Dining(commands.Cog):
                 else:
                     for day in days:
                         if "all" in meals:
-                            meals = [name for name, meal in self._menu[unit][day]
+                            meals = [name for name, meal in self._menu[unit][day].items()
                                      if meal.items_status == Meal.ITEMS_AVAILABLE]
 
                         for meal in meals:
