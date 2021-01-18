@@ -213,29 +213,38 @@ class Hours(commands.Cog):
             try:
                 # Is a dining unit?
                 locs.append(self._dining[arg])
+                continue
             except KeyError:
+                pass
+
+            try:
+                # Is a library?
+                locs.append(self._libraries[arg])
+                continue
+            except KeyError:
+                pass
+
+            # Is the post office?
+            try:
+                locs.append(self._post_offices[arg])
+                continue
+            except KeyError:
+                pass
+
+            # Is a day?
+            if arg == "today":
+                days.append(today())
+            elif arg == "tomorrow":
+                days.append(tomorrow())
+            else:
                 try:
-                    # Is a library?
-                    locs.append(self._libraries[arg])
-                except KeyError:
-                    # Is the post office?
-                    try:
-                        locs.append(self._post_offices[arg])
-                    except KeyError:
-                        # Is a day?
-                        if arg == "today":
-                            days.append(today())
-                        elif arg == "tomorrow":
-                            days.append(tomorrow())
-                        else:
-                            try:
-                                days.append(Day(arg))
-                            except ValueError:
-                                if arg == "library":
-                                    # He he
-                                    raise commands.BadArgument("Which one, smartass?") from None
-                                else:
-                                    raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
+                    days.append(Day(arg))
+                except ValueError:
+                    if arg == "library":
+                        # Heh heh
+                        raise commands.BadArgument("Which one, smartass?") from None
+                    else:
+                        raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
         if not locs:
             raise commands.BadArgument("No facility was provided.") from None

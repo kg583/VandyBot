@@ -362,7 +362,7 @@ class Dining(commands.Cog):
                 else:
                     for day in days:
                         if "all" in meals:
-                            meals = [meal for meal in self._menu[unit][day]
+                            meals = [name for name, meal in self._menu[unit][day]
                                      if meal.items_status == Meal.ITEMS_AVAILABLE]
 
                         for meal in meals:
@@ -412,28 +412,37 @@ class Dining(commands.Cog):
             try:
                 # Is a unit?
                 units.append(self._units[arg])
+                continue
             except KeyError:
+                pass
+
+            try:
+                # Is a food truck?
+                units.append(self._food_trucks[arg])
+                continue
+            except KeyError:
+                pass
+
+            try:
+                # Is a meal?
+                if arg in ["all", "next"]:
+                    meals = [arg]
+                elif meals != ["all"]:
+                    meals.append(self._meals[arg])
+                continue
+            except KeyError:
+                pass
+
+            # Is a day?
+            if arg == "today":
+                days.append(today())
+            elif arg == "tomorrow":
+                days.append(tomorrow())
+            else:
                 try:
-                    # Is a food truck?
-                    units.append(self._food_trucks[arg])
-                except KeyError:
-                    try:
-                        # Is a meal?
-                        if arg in ["all", "next"]:
-                            meals = [arg]
-                        elif meals != ["all"]:
-                            meals.append(self._meals[arg])
-                    except KeyError:
-                        # Is a day?
-                        if arg == "today":
-                            days.append(today())
-                        elif arg == "tomorrow":
-                            days.append(tomorrow())
-                        else:
-                            try:
-                                days.append(Day(arg))
-                            except ValueError:
-                                raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
+                    days.append(Day(arg))
+                except ValueError:
+                    raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
         if not units:
             raise commands.BadArgument("No dining facility was provided.") from None
