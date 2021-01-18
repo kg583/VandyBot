@@ -8,18 +8,15 @@ import datetime
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
 
-# Convenient but clashes a bit
-now = datetime.datetime.today
-
 # GitHub directory
-github_raw = "https://raw.githubusercontent.com/kg583/VandyBot/master"
-github_url = "https://github.com/kg583/VandyBot"
+GITHUB_RAW = "https://raw.githubusercontent.com/kg583/VandyBot/master"
+GITHUB_URL = "https://github.com/kg583/VandyBot"
 
 # Max returns in a single command
-max_returns = 5
+MAX_RETURNS = 5
 
 # Replace common separators with '-'
-seps = str.maketrans({" ": "-",
+SEPS = str.maketrans({" ": "-",
                       "_": "-"})
 
 
@@ -80,7 +77,7 @@ def parameterize(name, iterable):
 async def post(session, url, data=None, headers=None):
     async with session.post(url, data=data, headers=headers) as response:
         if response.status != 200:
-            raise aiohttp.ClientConnectionError(f"Could not fetch from {url}.") from None
+            raise aiohttp.ClientConnectionError(f"Could not post to {url}.") from None
         text = await response.text()
         return text.encode().decode("unicode-escape")
 
@@ -96,11 +93,11 @@ def reader(filename):
 
 
 async def schedule(coro, times):
-    times = [time_on(now(), time) for time in times]
+    times = [time_on(datetime.datetime.now(), time) for time in times]
     times.append(times[0] + datetime.timedelta(days=1))
-    times_until = [time - now() for time in times]
-    await asyncio.sleep(min(time_until for time_until in times_until if time_until.days > 0).seconds)
-    return await coro
+    times_until = [time - datetime.datetime.now() for time in times]
+    await asyncio.sleep(min(time_until for time_until in times_until if time_until.days >= 0).seconds)
+    await coro()
 
 
 def time_on(date, time):
@@ -114,7 +111,7 @@ def to_time(time):
 
 
 class TooManySelections(Exception):
-    def __init__(self, max_count=max_returns, message="You have requested more than {} selections in one command.\n"
+    def __init__(self, max_count=MAX_RETURNS, message="You have requested more than {} selections in one command.\n"
                                                       "Please separate your requests and try again."):
         super().__init__(message.format(max_count))
 
@@ -165,7 +162,7 @@ class Day:
 
 
 def today():
-    return Day(now().strftime("%A"))
+    return Day(datetime.datetime.now().strftime("%A"))
 
 
 def tomorrow():

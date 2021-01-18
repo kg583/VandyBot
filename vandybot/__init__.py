@@ -46,7 +46,7 @@ async def on_command_error(ctx, error):
              brief="VandyBot's GitHub repository.",
              help="Returns the link to VandyBot's GitHub repository.")
 async def github(ctx):
-    embed = Embed(title="VandyBot on GitHub", url=github_url, color=DEFAULT_COLOR)
+    embed = Embed(title="VandyBot on GitHub", url=GITHUB_URL, color=DEFAULT_COLOR)
     embed.set_thumbnail(url="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png")
     embed.add_field(name="VandyBot is Open Source!", value="Check out the code on GitHub.")
 
@@ -74,11 +74,12 @@ def startup():
         print(f"DEBUG MODE == {debug.debugging}")
     if "DEBUG_GUILD_ID" in tokens:
         debug.guild = int(tokens["DEBUG_GUILD_ID"])
-    if "ASP_NET_SESSION_ID" in tokens:
-        bot.get_cog("Dining").get_cookie(default=tokens["ASP_NET_SESSION_ID"])
 
 
 async def main():
+    if "ASP_NET_SESSION_ID" in tokens:
+        await bot.get_cog("Dining").get_cookie(default=tokens["ASP_NET_SESSION_ID"])
+
     # Start cogs
     for cog in bot.cogs:
         await bot.get_cog(cog).startup()

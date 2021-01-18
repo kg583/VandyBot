@@ -64,7 +64,7 @@ class Hours(commands.Cog):
     @staticmethod
     def generate_embed(title, url, fields, footer, inline=False):
         embed = Embed(title=title, url=url, color=0x50E3C2)
-        embed.set_thumbnail(url=f"{github_raw}/{_dir}/thumbnail.png")
+        embed.set_thumbnail(url=f"{GITHUB_RAW}/{_dir}/thumbnail.png")
         embed.set_footer(text=footer)
         for header, text in fields.items():
             embed.add_field(name=header, value=text, inline=inline)
@@ -209,7 +209,7 @@ class Hours(commands.Cog):
 
         # Args can be in any order
         for arg in args:
-            arg = arg.lower().replace("'", "").translate(seps)
+            arg = arg.lower().replace("'", "").translate(SEPS)
             try:
                 # Is a dining unit?
                 locs.append(self._dining[arg])
@@ -242,7 +242,7 @@ class Hours(commands.Cog):
         if not days:
             days = [today()]
 
-        if len(locs) * len(days) > max_returns:
+        if len(locs) * len(days) > MAX_RETURNS:
             raise TooManySelections from None
 
         return locs, days
