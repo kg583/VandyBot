@@ -1,5 +1,5 @@
 import env_file
-from discord import Activity, ActivityType, Embed
+from discord import Embed
 from discord.ext import commands
 
 from .helper import *
@@ -22,8 +22,8 @@ DEBUG_GUILD_ID = int(tokens.get("DEBUG_GUILD_ID", "0"))
 @bot.event
 async def on_ready():
     print("VandyBot has connected. Awaiting command requests...")
-    activity = "Type ~help for usage!" if not DEBUGGING else "Currently undergoing maintenance"
-    await bot.change_presence(activity=Activity(type=ActivityType.playing, name=activity))
+    text = DEFAULT_TEXT if not DEBUGGING else "Currently undergoing maintenance"
+    await bot.change_presence(activity=presence(text))
 
 
 @bot.event

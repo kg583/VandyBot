@@ -1,12 +1,15 @@
 import aiohttp
 import asyncio
+import datetime
+
 from bs4 import BeautifulSoup
 from collections import OrderedDict
-import datetime
+from discord import Activity, ActivityType
 
 
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
+DEFAULT_TEXT = "Type ~help for usage!"
 
 # GitHub directory
 GITHUB_RAW = "https://raw.githubusercontent.com/kg583/VandyBot/master"
@@ -98,6 +101,10 @@ async def schedule(coro, times):
     times_until = [time - datetime.datetime.now() for time in times]
     await asyncio.sleep(min(time_until for time_until in times_until if time_until.days >= 0).seconds)
     await coro()
+
+
+def presence(text):
+    return Activity(type=ActivityType.playing, name=text)
 
 
 def time_on(date, time):
