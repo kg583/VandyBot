@@ -2,9 +2,9 @@ import env_file
 from discord import Activity, ActivityType, Embed
 from discord.ext import commands
 
-# Import cogs
 from .helper import *
 
+# Import cogs
 from vandybot.covid import Covid
 from vandybot.dining import Dining
 from vandybot.hours import Hours

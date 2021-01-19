@@ -36,7 +36,7 @@ class Meal:
               "Daily Offerings": 0x4A90E2}
     DEFAULT = "Daily Offerings"
 
-    # Availability types
+    # Fake enum
     ITEMS_NOT_FOUND = 0
     ITEMS_NOT_LISTED = 1
     ITEMS_AVAILABLE = 2
