@@ -3,29 +3,42 @@ from discord import Activity, ActivityType, Embed
 from discord.ext import commands
 
 # Import cogs
-from . import debug
 from .helper import *
 
 from vandybot.covid import Covid
 from vandybot.dining import Dining
 from vandybot.hours import Hours
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("~"),
+PREFIX = "~"
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX),
                    case_insensitive=True)
+
+# Read tokens
+DEBUGGING = False
+DEBUG_GUILD = 0
+
 tokens = env_file.get()
+if "DEBUGGING" in tokens:
+    DEBUGGING = tokens["DEBUGGING"] == "True"
+    print(f"DEBUG MODE == {DEBUGGING}")
+if "DEBUG_GUILD_ID" in tokens:
+    DEBUG_GUILD = int(tokens["DEBUG_GUILD_ID"])
 
 
 @bot.event
 async def on_ready():
     print("VandyBot has connected. Awaiting command requests...")
-    activity = "Type ~help for usage!" if not debug.debugging else "Currently undergoing maintenance"
+    activity = "Type ~help for usage!" if not DEBUGGING else "Currently undergoing maintenance"
     await bot.change_presence(activity=Activity(type=ActivityType.playing, name=activity))
 
 
 @bot.event
 async def on_message(message):
-    if message.author != bot.user and (not debug.debugging or message.guild.id == debug.guild):
-        await bot.process_commands(message)
+    if message.author != bot.user:
+        if not DEBUGGING or message.guild.id == DEBUG_GUILD:
+            await bot.process_commands(message)
+        elif message.content.startswith(PREFIX):
+            await message.channel.send("VandyBot is currently offline for maintenance. Please try again later.")
 
 
 @bot.event
@@ -67,13 +80,6 @@ def startup():
     bot.add_cog(Covid(bot))
     bot.add_cog(Dining(bot))
     bot.add_cog(Hours(bot))
-
-    # Read tokens
-    if "DEBUGGING" in tokens:
-        debug.debugging = tokens["DEBUGGING"] == "True"
-        print(f"DEBUG MODE == {debug.debugging}")
-    if "DEBUG_GUILD_ID" in tokens:
-        debug.guild = int(tokens["DEBUG_GUILD_ID"])
 
 
 async def main():
