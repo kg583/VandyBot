@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX),
 # Read tokens
 tokens = env_file.get()
 DEBUGGING = tokens.get("DEBUGGING", "False") == "True"
-DEBUG_GUILD_ID = tokens.get("DEBUG_GUILD_ID", 0)
+DEBUG_GUILD_ID = int(tokens.get("DEBUG_GUILD_ID", "0"))
 
 
 @bot.event
@@ -31,8 +31,6 @@ async def on_message(message):
     if message.author != bot.user:
         if not DEBUGGING or message.guild.id == DEBUG_GUILD_ID:
             await bot.process_commands(message)
-        elif message.content.startswith(PREFIX):
-            await message.channel.send("VandyBot is currently offline for maintenance. Please try again later.")
 
 
 @bot.event

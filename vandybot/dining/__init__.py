@@ -320,6 +320,7 @@ class Dining(commands.Cog):
                     default = unit_menu[day][Meal.DEFAULT]
                     default.opens = min(meal.opens for meal in need_hours)
                     default.closes = max(meal.closes for meal in need_hours)
+                    default.hours_status = Meal.HOURS_AVAILABLE
 
         except AttributeError:
             # No menus are available
@@ -376,6 +377,7 @@ class Dining(commands.Cog):
 
                             embed = self.menu_dispatch(unit, meal)
                             await ctx.send(embed=embed)
+                            await asyncio.sleep(1)
 
     def menu_dispatch(self, unit, meal):
         if meal.items_status == Meal.ITEMS_NOT_LISTED:
