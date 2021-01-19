@@ -221,7 +221,6 @@ class Dining(commands.Cog):
         # Create blank menu
         menu = {unit: OrderedDict() for unit in self._units.values()}
         await self.get_cookie()
-        await self._bot.change_presence(activity=presence("Fetching today's menus"))
 
         # Go through the units
         try:
@@ -236,8 +235,6 @@ class Dining(commands.Cog):
 
                 # Schedule the next fetch
                 self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
-                await self._bot.change_presence(activity=presence(DEFAULT_TEXT))
-                return
 
         except aiohttp.ClientConnectionError:
             # Need to restart the fetch
