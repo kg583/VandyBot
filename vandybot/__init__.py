@@ -14,15 +14,9 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX),
                    case_insensitive=True)
 
 # Read tokens
-DEBUGGING = False
-DEBUG_GUILD = 0
-
 tokens = env_file.get()
-if "DEBUGGING" in tokens:
-    DEBUGGING = tokens["DEBUGGING"] == "True"
-    print(f"DEBUG MODE == {DEBUGGING}")
-if "DEBUG_GUILD_ID" in tokens:
-    DEBUG_GUILD = int(tokens["DEBUG_GUILD_ID"])
+DEBUGGING = tokens.get("DEBUGGING", "False") == "True"
+DEBUG_GUILD_ID = tokens.get("DEBUG_GUILD_ID", 0)
 
 
 @bot.event
@@ -35,7 +29,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author != bot.user:
-        if not DEBUGGING or message.guild.id == DEBUG_GUILD:
+        if not DEBUGGING or message.guild.id == DEBUG_GUILD_ID:
             await bot.process_commands(message)
         elif message.content.startswith(PREFIX):
             await message.channel.send("VandyBot is currently offline for maintenance. Please try again later.")
@@ -75,6 +69,7 @@ async def ping(ctx):
 
 def startup():
     print("VandyBot is starting up...")
+    print(f"DEBUG MODE == {DEBUGGING}")
 
     # Establish cogs
     bot.add_cog(Covid(bot))
