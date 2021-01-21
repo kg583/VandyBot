@@ -112,7 +112,7 @@ class Dining(commands.Cog):
 
     SCHEDULE = [Time("3:00 AM")]
     RETRY_DELAY = 300
-    MAX_RETRIES = 6
+    MAX_RETRIES = 12
 
     MIN_SINCE = 3600
 
@@ -178,7 +178,7 @@ class Dining(commands.Cog):
                    "ASP.NET_SessionId": default}
         async with self._session.get(self.MENU_URL, params={"Access-Control-Allow-Credentials": "true"}) as response:
             if response.status != 200:
-                raise aiohttp.ClientConnectionError(f"Could not fetch cookie from {self.MENU_URL}.") from None
+                return
 
             try:
                 cookies["ASP.NET_SessionId"] = response.cookies["ASP.NET_SessionId"].coded_value
