@@ -94,7 +94,7 @@ class Hours(commands.Cog):
 
             index += 1
 
-        return hours, "Reported hours do not necessarily reflect unexpected closures or holidays."
+        return hours, "Dining areas may be open to students between listed meal times."
 
     async def get_dining_unit_oid(self, unit):
         response = await fetch(self._session, self.DINING_URL)
@@ -160,11 +160,8 @@ class Hours(commands.Cog):
                     except KeyError:
                         raise HoursNotFound(loc)
 
-                    if "Closed" in loc_hours:
-                        fields = {f"Hours on {day}": "CLOSED"}
-                    else:
-                        fields = {f"Hours on {day}": "\n".join("{} to {}".format(*span) for span in loc_hours)}
-
+                    fields = {underline(f"Hours on {day}"): "CLOSED" if "Closed" in loc_hours else "\n".join(
+                        "{} to {}".format(*span) for span in loc_hours)}
                     embed = self.generate_embed(title=loc, url=url, fields=fields, footer=footer)
                     await ctx.send(embed=embed)
 

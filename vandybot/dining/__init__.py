@@ -35,6 +35,7 @@ class Meal:
               "Brunch": 0xF16907,
               "Daily Offerings": 0x4A90E2}
     DEFAULT = "Daily Offerings"
+    ORDER_URL = "https://get.cbord.com/vanderbilt/full/food_home.php"
 
     # Fake enum
     ITEMS_NOT_FOUND = 0
@@ -56,6 +57,7 @@ class Meal:
 
         self.items = {}
         self.items_status = self.ITEMS_NOT_FOUND
+        self.can_order = False
 
     def __str__(self):
         if self.day == today():
@@ -67,35 +69,38 @@ class Meal:
 
     @property
     def status(self):
+        text = "Unavailable"
         if self.hours_status == self.HOURS_AVAILABLE and self.items_status != self.ITEMS_NOT_FOUND:
             if datetime.datetime.now().time() < self.opens and self.day == today() or \
                     datetime.datetime.now().time() > self.opens and self.day == tomorrow():
-                return f"CLOSED until {self.opens}"
+                text = f"CLOSED until {self.opens}"
             elif datetime.datetime.now().time() > self.closes and self.day == today():
-                return f"CLOSED since {self.closes}"
+                text = f"CLOSED since {self.closes}"
             elif self.opens <= datetime.datetime.now().time() <= self.closes and self.day == today():
-                return f"OPEN until {self.closes}"
+                text = f"OPEN until {self.closes}"
             else:
-                return f"OPENS at {self.opens}"
+                text = f"OPENS at {self.opens}"
         elif self.hours_status == self.HOURS_NOT_FOUND and self.items_status != self.ITEMS_NOT_FOUND:
             # This one shouldn't happen often
             if self.day == today():
-                return "OPEN today"
+                text = "OPEN today"
             elif self.day == tomorrow():
-                return "OPEN tomorrow"
+                text = "OPEN tomorrow"
             else:
-                return f"OPEN on {self.day}"
+                text = f"OPEN on {self.day}"
         elif self.hours_status == self.CLOSED:
-            # This one shouldn't happen often
-            if self.day == today():
-                return "CLOSED today"
-            elif self.day == tomorrow():
-                return "CLOSED tomorrow"
-            else:
-                return f"CLOSED on {self.day}"
-        else:
             # This one shouldn't happen ever
-            return "Unavailable"
+            if self.day == today():
+                text = "CLOSED today"
+            elif self.day == tomorrow():
+                text = "CLOSED tomorrow"
+            else:
+                text = f"CLOSED on {self.day}"
+
+        if self.can_order:
+            text += f"\n[Order now via GET]({self.ORDER_URL})"
+
+        return text
 
 
 # Main Cog
@@ -212,6 +217,10 @@ class Dining(commands.Cog):
                 if current_item == "None":
                     # Sometimes headers just aren't labeled and it makes me sad
                     current_item = meal.name
+                if "GET" in current_item:
+                    # GET App meals are special
+                    current_item = current_item.split("GET")[0] + "- GET"
+                    meal.can_order = True
             else:
                 items.update({current_item: items.get(current_item, []) + [item.get_text()]})
 
@@ -349,7 +358,7 @@ class Dining(commands.Cog):
         if args and args[0] == "list":
             await ctx.send(embed=self.menu_list)
         else:
-            units, days, meals = self.menu_parse(args)
+            units, days, names = self.menu_parse(args)
 
             for unit in units:
                 # Food trucks are special
@@ -361,15 +370,15 @@ class Dining(commands.Cog):
                     await ctx.send(embed=embed)
                 else:
                     for day in days:
-                        if "all" in meals:
-                            meals = [name for name, meal in self._menu[unit][day].items()
+                        if "all" in names:
+                            names = [name for name, meal in self._menu[unit][day].items()
                                      if meal.items_status == Meal.ITEMS_AVAILABLE]
 
-                        for meal in meals:
-                            if meal == "next":
+                        for name in names:
+                            if name == "next":
                                 meal = self.find_next_meal(unit, day)
                             else:
-                                meal = self._menu[unit][day][meal]
+                                meal = self._menu[unit][day][name]
 
                             if meal.items_status == Meal.ITEMS_NOT_FOUND:
                                 # Find next instance of that meal if possible
@@ -385,7 +394,7 @@ class Dining(commands.Cog):
         else:
             items = meal.items
 
-        fields = OrderedDict({str(meal): meal.status})
+        fields = OrderedDict({underline(str(meal)): meal.status})
         fields.update({header: ", ".join(text) for header, text in items.items()})
         embed = self.generate_embed(title=unit, url=self.MENU_URL, color=meal.color, fields=fields)
         embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
@@ -405,7 +414,7 @@ class Dining(commands.Cog):
         return embed
 
     def menu_parse(self, args):
-        units, days, meals = [], [], []
+        units, days, names = [], [], []
 
         # Args can be in any order
         for arg in args:
@@ -427,9 +436,9 @@ class Dining(commands.Cog):
             try:
                 # Is a meal?
                 if arg in ["all", "next"]:
-                    meals = [arg]
-                elif meals != ["all"]:
-                    meals.append(self._meals[arg])
+                    names = [arg]
+                elif names != ["all"]:
+                    names.append(self._meals[arg])
                 continue
             except KeyError:
                 pass
@@ -449,13 +458,13 @@ class Dining(commands.Cog):
             raise commands.BadArgument("No dining facility was provided.") from None
         if not days:
             days = [today()]
-        if not meals:
+        if not names:
             if days == [today()]:
-                meals = ["next"]
+                names = ["next"]
             else:
-                meals = ["all"]
+                names = ["all"]
 
-        if len(units) * len(days) * len(meals) > MAX_RETURNS:
+        if len(units) * len(days) * len(names) > MAX_RETURNS:
             raise TooManySelections from None
 
-        return units, days, meals
+        return units, days, names

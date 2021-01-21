@@ -21,7 +21,7 @@ class Covid(commands.Cog):
         for index, header in enumerate(headers):
             embed.add_field(name=header, value="\n".join(row[index] for row in rows))
 
-        embed.set_footer(text="Mandatory weekly testing has concluded for the semester.")
+        embed.set_footer(text="Spring semester testing data is not yet available.")
         return embed
 
     @staticmethod
@@ -55,6 +55,6 @@ class Covid(commands.Cog):
                       usage="")
     async def covid(self, ctx):
         data = await self.get_data()
-        embed = self.generate_embed(title="COVID-19 Dashboard", url=self.URL,
-                                    headers=("Week", "Test Results", "Positivity Rate"), rows=data)
+        headers = tuple(map(underline, ("Week", "Test Results", "Positivity Rate")))
+        embed = self.generate_embed(title="COVID-19 Dashboard", url=self.URL, headers=headers, rows=data)
         await ctx.send(embed=embed)
