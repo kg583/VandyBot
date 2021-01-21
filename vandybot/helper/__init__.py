@@ -108,7 +108,7 @@ def presence(text):
 
 
 def time_on(date, time):
-    return datetime.datetime(*date.date().timetuple()[:3], time.hour, time.minute, time.second)
+    return datetime.datetime(*date.timetuple()[:3], time.hour, time.minute, time.second)
 
 
 def to_time(time):

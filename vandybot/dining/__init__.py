@@ -114,6 +114,8 @@ class Dining(commands.Cog):
     RETRY_DELAY = 300
     MAX_RETRIES = 6
 
+    MIN_SINCE = 3600
+
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
@@ -380,7 +382,9 @@ class Dining(commands.Cog):
                             else:
                                 meal = self._menu[unit][day][name]
 
-                            if meal.items_status == Meal.ITEMS_NOT_FOUND:
+                            closing = time_on(datetime.date.today(), meal.closes)
+                            if meal.items_status == Meal.ITEMS_NOT_FOUND or \
+                                    (datetime.datetime.now() - closing).seconds > self.MIN_SINCE:
                                 # Find next instance of that meal if possible
                                 meal = self.find_next_meal(unit, day, meal.name)
 
