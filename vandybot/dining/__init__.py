@@ -111,8 +111,8 @@ class Dining(commands.Cog):
     MENU_HEADER = {"Referer": MENU_URL}
 
     SCHEDULE = [Time("3:00 AM")]
-    RETRY_DELAY = 300
-    MAX_RETRIES = 12
+    RETRY_DELAY = 600
+    MAX_RETRIES = 6
 
     MIN_SINCE = 3600
 
@@ -253,7 +253,7 @@ class Dining(commands.Cog):
             pass
 
         # Fetch failed for some reason
-        if self._retries < self.MAX_RETRIES:
+        if self._retries < self.MAX_RETRIES or not self._menu:
             await asyncio.sleep(self.RETRY_DELAY)
             self._retries += 1
             await self.get_menu()
