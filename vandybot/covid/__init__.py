@@ -21,7 +21,7 @@ class Covid(commands.Cog):
         for index, header in enumerate(headers):
             embed.add_field(name=header, value="\n".join(row[index] for row in rows))
 
-        embed.set_footer(text="Spring semester testing data is not yet available.")
+        embed.set_footer(text="Spring semester testing data is not yet available")
         return embed
 
     @staticmethod
@@ -49,7 +49,7 @@ class Covid(commands.Cog):
         pass
 
     @commands.command(name="covid",
-                      brief="Gets current statistics on COVID-19 cases.",
+                      brief="Gets current statistics on COVID-19 cases",
                       help="Retrieves the statistics to-date for COVID-19 tests and positive cases among Vanderbilt "
                            "students, as well as an overall summary of the data.",
                       usage="")

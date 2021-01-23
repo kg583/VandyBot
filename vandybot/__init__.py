@@ -48,7 +48,7 @@ async def on_command_error(ctx, error):
 
 @bot.command(name="github",
              aliases=("code",),
-             brief="VandyBot's GitHub repository.",
+             brief="VandyBot's GitHub repository",
              help="Returns the link to VandyBot's GitHub repository.")
 async def github(ctx):
     embed = Embed(title="VandyBot on GitHub", url=GITHUB_URL, color=DEFAULT_COLOR)
@@ -59,7 +59,7 @@ async def github(ctx):
 
 
 @bot.command(name="ping",
-             brief="Pings the VandyBot client.",
+             brief="Pings the VandyBot client",
              help="Returns the current latency to the VandyBot client.")
 async def ping(ctx):
     await ctx.send(f"~pong ({bot.latency * 1000:.3f}ms)")

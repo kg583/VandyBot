@@ -94,7 +94,7 @@ class Hours(commands.Cog):
 
             index += 1
 
-        return hours, "Dining areas may be open to students between listed meal times."
+        return hours, "Dining areas may be open to students between listed meal times"
 
     async def get_dining_unit_oid(self, unit):
         response = await fetch(self._session, self.DINING_URL)
@@ -127,7 +127,7 @@ class Hours(commands.Cog):
         await self._session.post(self.DINING_URL + "/Home/ResetSelections", headers=self.DINING_HEADER)
 
     @commands.command(name="hours",
-                      brief="Gets the operating hours for various on-campus facilities.",
+                      brief="Gets the operating hours for various on-campus facilities",
                       help="Retrieves the operating hours on a given day for on-campus dining centers and libraries. "
                            "Arguments can be specified in any order.",
                       usage="location [day=today]\n"
@@ -149,7 +149,7 @@ class Hours(commands.Cog):
                     all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
                                  if " - " in time else ["Closed"]
                                  for day, time in self._post_office_hours.items()}
-                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays."
+                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays"
                     url = self.POST_OFFICE_URL
                 else:
                     raise UnitNotFound(loc)
