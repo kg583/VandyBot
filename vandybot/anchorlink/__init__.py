@@ -26,7 +26,7 @@ class AnchorLink(commands.Cog):
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=500):
         embed = Embed(title=title, url=url, color=color)
-        embed.set_thumbnail(url=f"{github_raw}/{_dir}/thumbnail.jpeg")
+        embed.set_thumbnail(url=f"{GITHUB_RAW}/{_dir}/thumbnail.jpeg")
         for header, text in fields.items():
             if len(text) > max_len:
                 splitter = text[max_len:].find(", ")
@@ -35,7 +35,7 @@ class AnchorLink(commands.Cog):
 
         return embed
 
-    async def get_events(self, take=10, query="", ends_after=now(), starts_before=None,
+    async def get_events(self, take=10, query="", ends_after=datetime.datetime.now(), starts_before=None,
                          is_online="", themes=None, category_ids=None, perks=None):
         # Set GET params
         params = {"query": query,
