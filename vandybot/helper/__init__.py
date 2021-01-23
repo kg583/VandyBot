@@ -3,7 +3,6 @@ import asyncio
 import datetime
 
 from bs4 import BeautifulSoup
-from collections import OrderedDict
 from discord import Activity, ActivityType
 
 

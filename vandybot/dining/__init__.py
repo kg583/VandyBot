@@ -221,16 +221,16 @@ class Dining(commands.Cog):
                     current_item = meal.name
                 if "GET" in current_item:
                     # GET App meals are special
-                    current_item = current_item.split("GET")[0] + "- GET"
+                    current_item = current_item.split("GET")[0] + "(GET)"
                     meal.can_order = True
             else:
                 items.update({current_item: items.get(current_item, []) + [item.get_text()]})
 
-        return OrderedDict(sorted(items.items()))
+        return dict(sorted(items.items()))
 
     async def get_menu(self):
         # Create blank menu
-        menu = {unit: OrderedDict() for unit in self._units.values()}
+        menu = {unit: {} for unit in self._units.values()}
         await self.get_cookie()
 
         # Go through the units
@@ -260,9 +260,8 @@ class Dining(commands.Cog):
 
     async def get_unit_menu(self, unit):
         unit_oid = self._unit_oids[unit]
-        unit_menu = OrderedDict([(Day(day), OrderedDict([(meal, Meal(meal, day))
-                                                         for meal in self._meals.values()]))
-                                 for day in Day.DAYS[:7]])
+        unit_menu = {Day(day): {meal: Meal(meal, day) for meal in self._meals.values()}
+                     for day in Day.DAYS[:7]}
 
         response = await post(self._session, f"{self.MENU_URL}/Unit/SelectUnitFromUnitsList",
                               data={"unitOid": unit_oid},
@@ -348,47 +347,54 @@ class Dining(commands.Cog):
         await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.MENU_HEADER)
 
     @commands.command(name="menu",
-                      brief="Gets menus from on-campus dining locations.",
+                      brief="Gets menus from on-campus dining locations",
                       help="Retrieves the menu for a given date and meal from on-campus dining locations. "
                            "Arguments can be specified in any order.\n"
                            "Multiple arguments can be provided so long as the total return "
                            f"does not exceed {MAX_RETURNS} menus.",
                       usage="[location] [day=today] [meal=next]\n"
-                            "~menu [location] [day] [meal=all]\n"
+                            "~menu [location] [day] list\n"
+                            "~menu [location] list\n"
                             "~menu list")
     async def menu(self, ctx, *args):
-        if args and args[0] == "list":
-            await ctx.send(embed=self.menu_list)
-        else:
-            units, days, names = self.menu_parse(args)
+        units, days, names = self.menu_parse(args)
 
-            for unit in units:
+        for unit in units:
+            if unit == "list":
+                # Largest listing
+                embed = self.menu_list()
+                await ctx.send(embed=embed)
+            elif unit in self._food_trucks.values():
                 # Food trucks are special
-                if unit in self._food_trucks.values():
-                    menu_img = await self.get_food_truck_menu(unit)
-                    embed = Embed(title=unit, url=self.FOOD_TRUCK_URL, color=0x7ED321)
-                    embed.set_image(url=menu_img)
-                    embed.set_footer(text="Food trucks are available on campus on a rotating schedule")
-                    await ctx.send(embed=embed)
-                else:
-                    for day in days:
-                        if "all" in names:
-                            names = [name for name, meal in self._menu[unit][day].items()
-                                     if meal.items_status == Meal.ITEMS_AVAILABLE]
-
+                menu_img = await self.get_food_truck_menu(unit)
+                embed = Embed(title=unit, url=self.FOOD_TRUCK_URL, color=0x7ED321)
+                embed.set_image(url=menu_img)
+                embed.set_footer(text="Food trucks are available on campus on a rotating schedule")
+                await ctx.send(embed=embed)
+            else:
+                for day in days:
+                    if day == "list":
+                        embed = self.menu_list(unit)
+                        await ctx.send(embed=embed)
+                        await asyncio.sleep(1)
+                    else:
                         for name in names:
-                            if name == "next":
-                                meal = self.find_next_meal(unit, day)
+                            if name == "list":
+                                embed = self.menu_list(unit, day)
                             else:
-                                meal = self._menu[unit][day][name]
+                                if name == "next":
+                                    meal = self.find_next_meal(unit, day)
+                                else:
+                                    meal = self._menu[unit][day][name]
 
-                            closing = time_on(datetime.date.today(), meal.closes)
-                            if meal.items_status == Meal.ITEMS_NOT_FOUND or \
-                                    (datetime.datetime.now() - closing).seconds > self.MIN_SINCE:
-                                # Find next instance of that meal if possible
-                                meal = self.find_next_meal(unit, day, meal.name)
+                                closing = time_on(datetime.date.today(), meal.closes)
+                                if meal.items_status == Meal.ITEMS_NOT_FOUND or \
+                                        (datetime.datetime.now() - closing).seconds > self.MIN_SINCE:
+                                    # Find next instance of that meal if possible
+                                    meal = self.find_next_meal(unit, day, meal.name)
 
-                            embed = self.menu_dispatch(unit, meal)
+                                embed = self.menu_dispatch(unit, meal)
+
                             await ctx.send(embed=embed)
                             await asyncio.sleep(1)
 
@@ -398,77 +404,106 @@ class Dining(commands.Cog):
         else:
             items = meal.items
 
-        fields = OrderedDict({underline(str(meal)): meal.status})
+        fields = {underline(str(meal)): meal.status}
         fields.update({header: ", ".join(text) for header, text in items.items()})
         embed = self.generate_embed(title=unit, url=self.MENU_URL, color=meal.color, fields=fields)
         embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
 
         return embed
 
-    @property
-    def menu_list(self):
-        embed = self.generate_embed(title="On-Campus Dining Locations", url=self.MENU_URL, color=DEFAULT_COLOR,
-                                    fields=self._list, inline=True)
-        embed.add_field(name="Additional Arguments",
-                        value="Up to five total selections may be requested at once\ne.g. `rand ebi lunch dinner`\n"
-                              "Arguments can be specified with different separators\ne.g. `local_java`\n"
-                              "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
-                              "Alternative names are also permitted\ne.g. `kitchen` for `kissam`",
-                        inline=False)
+    def menu_list(self, unit=None, day=None):
+        if unit is None and day is None:
+            # The master listing
+            embed = self.generate_embed(title="On-Campus Dining Locations", url=self.MENU_URL, color=DEFAULT_COLOR,
+                                        fields=self._list, inline=True)
+            embed.add_field(name="Additional Arguments",
+                            value="Up to five total selections may be requested at once\ne.g. `rand ebi lunch dinner`\n"
+                                  "Arguments can be specified with different separators\ne.g. `local_java`\n"
+                                  "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
+                                  "Alternative names are also permitted\ne.g. `kitchen` for `kissam`",
+                            inline=False)
+        elif day is None:
+            # The week's listing
+            unit_menu = self._menu[unit]
+            fields = {underline(day): "\n".join(name for name in names
+                                                if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)
+                      for day, names in unit_menu.items() if any(meal.items_status == Meal.ITEMS_AVAILABLE
+                                                                 for name, meal in unit_menu[day].items())}
+            embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR,
+                                        fields=fields, inline=True)
+            embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
+        else:
+            # The day's listing
+            fields = {str(meal): ", ".join(item for item in meal.items.keys())
+                      for name, meal in self._menu[unit][day].items() if meal.items_status == Meal.ITEMS_AVAILABLE}
+            embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR, fields=fields)
+            embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
+
         return embed
 
     def menu_parse(self, args):
-        units, days, names = [], [], []
+        # Dicts to remove duplicates
+        units, days, names, listing = {}, {}, {}, False
 
         # Args can be in any order
         for arg in args:
             arg = arg.lower().replace("'", "").translate(SEPS)
             try:
                 # Is a unit?
-                units.append(self._units[arg])
+                units.update({self._units[arg]: 0})
                 continue
             except KeyError:
                 pass
 
             try:
                 # Is a food truck?
-                units.append(self._food_trucks[arg])
+                units.update({self._food_trucks[arg]: 0})
                 continue
             except KeyError:
                 pass
 
             try:
-                # Is a meal?
-                if arg in ["all", "next"]:
-                    names = [arg]
-                elif names != ["all"]:
-                    names.append(self._meals[arg])
+                # Is a meal or a listing request?
+                if arg == "next":
+                    names = {arg: 0}
+                elif arg == "list":
+                    listing = True
+                else:
+                    names.update({self._meals[arg]: 0})
                 continue
             except KeyError:
                 pass
 
             # Is a day?
             if arg == "today":
-                days.append(today())
+                days.update({today(): 0})
             elif arg == "tomorrow":
-                days.append(tomorrow())
+                days.update({tomorrow(): 0})
             else:
                 try:
-                    days.append(Day(arg))
+                    days.update({Day(arg): 0})
                 except ValueError:
                     raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
-        if not units:
-            raise commands.BadArgument("No dining facility was provided.") from None
-        if not days:
-            days = [today()]
-        if not names:
-            if days == [today()]:
-                names = ["next"]
-            else:
-                names = ["all"]
+        if not listing:
+            if not units:
+                raise commands.BadArgument("No dining facility was provided.") from None
+            if not days:
+                days = [today()]
+            if not names:
+                if days == [today()]:
+                    names = ["next"]
+                else:
+                    names = ["list"]
+        else:
+            if not units:
+                units = ["list"]
+            elif not days:
+                days = ["list"]
+            elif not names:
+                names = ["list"]
 
-        if len(units) * len(days) * len(names) > MAX_RETURNS:
+        if len(units) * min(len(days), 1) * min(len(names), 1) > MAX_RETURNS:
             raise TooManySelections from None
 
         return units, days, names
