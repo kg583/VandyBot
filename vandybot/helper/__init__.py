@@ -144,10 +144,28 @@ class Day:
     def __str__(self):
         return self.DAYS[self.day]
 
+    def __lt__(self, other):
+        try:
+            return self.relative_day < other.relative_day
+        except AttributeError:
+            return False
+
+    def __le__(self, other):
+        return self < other or self == other
+
     def __eq__(self, other):
         try:
             return int(self) == int(other)
         except ValueError:
+            return False
+
+    def __ge__(self, other):
+        return self > other or self == other
+
+    def __gt__(self, other):
+        try:
+            return self.relative_day > other.relative_day
+        except AttributeError:
             return False
 
     def __add__(self, other):
@@ -165,6 +183,10 @@ class Day:
         self.day -= int(other)
         self.day %= 7
         return self
+
+    @property
+    def relative_day(self):
+        return (self.day - int(datetime.datetime.now().strftime("%w"))) % 7
 
 
 def today():

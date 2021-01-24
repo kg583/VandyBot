@@ -427,8 +427,8 @@ class Dining(commands.Cog):
             unit_menu = self._menu[unit]
             fields = {underline(day): "\n".join(name for name in names
                                                 if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)
-                      for day, names in unit_menu.items() if any(meal.items_status == Meal.ITEMS_AVAILABLE
-                                                                 for name, meal in unit_menu[day].items())}
+                      for day, names in sorted(unit_menu.items()) if any(meal.items_status == Meal.ITEMS_AVAILABLE
+                                                                         for name, meal in unit_menu[day].items())}
             embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR,
                                         fields=fields, inline=True)
             embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
