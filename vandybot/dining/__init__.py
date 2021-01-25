@@ -110,9 +110,9 @@ class Dining(commands.Cog):
     MENU_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
     MENU_HEADER = {"Referer": MENU_URL}
 
-    SCHEDULE = [Time("3:00 AM")]
+    SCHEDULE = [Time("4:18 AM")]
     RETRY_DELAY = 600
-    MAX_RETRIES = 6
+    MAX_RETRIES = 3
 
     MIN_SINCE = 3600
 
