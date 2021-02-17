@@ -22,6 +22,15 @@ class UnitNotFound(HoursError):
         super().__init__(message.format(unit))
 
 
+class UnitClosed(UnitNotFound):
+    def __init__(self, unit, message="{} is currently closed.", reason=""):
+        if reason:
+            message = "{} is currently closed due to {}."
+            super().__init__(unit, message.format("{}", reason))
+        else:
+            super().__init__(unit, message)
+
+
 # Main Cog
 class Hours(commands.Cog):
     # URL stuff
@@ -38,6 +47,7 @@ class Hours(commands.Cog):
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
         self._post_offices = reader(f"{_dir}/post_offices")
+        self._loc_conditions = reader(f"{_dir}/loc_conditions")
 
         self._post_office_hours = reader(f"{_dir}/post_office_hours")
 
@@ -162,8 +172,18 @@ class Hours(commands.Cog):
 
                     fields = {underline(f"Hours on {day}"): "CLOSED" if "Closed" in loc_hours else "\n".join(
                         "{} to {}".format(*span) for span in loc_hours)}
+                    footer = self.hours_footer(loc, footer)
                     embed = self.generate_embed(title=loc, url=url, fields=fields, footer=footer)
                     await ctx.send(embed=embed)
+
+    def hours_footer(self, loc, default):
+        condition = self._loc_conditions.get(loc, "")
+        if "Closed due to" == condition[:13]:
+            raise UnitClosed(loc, reason=condition[14:])
+        elif condition:
+            return condition
+        else:
+            return default
 
     def hours_from_dining(self, unit):
         async def dispatcher(ctx, hour_arg, *args):
