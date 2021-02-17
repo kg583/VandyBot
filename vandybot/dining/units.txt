@@ -37,6 +37,7 @@ common-grounds-munchie: Common Grounds Munchie
 highland: Highland Munchie
 highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie
+blair: Blair PickUpSpot
 blair-pickup: Blair PickUpSpot
 blair-pickupspot: Blair PickUpSpot
 blair-pickup-spot: Blair PickUpSpot
