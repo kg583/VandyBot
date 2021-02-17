@@ -273,12 +273,14 @@ class Dining(commands.Cog):
         try:
             for day_soup in blocks:
                 day = Day(day_soup.find("header").get_text().split(",")[0])
-                for meal_soup in day_soup.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3"):
-                    meal = Meal(meal_soup.get_text(), day)
-                    meal.oid = find_oid(meal_soup)
-                    meal.items = await self.get_items(meal)
-                    meal.items_status = Meal.ITEMS_AVAILABLE if meal.items else Meal.ITEMS_NOT_LISTED
-                    unit_menu[day][meal.name] = meal
+                if day + 1 != today():
+                    # Awkward yesterday check
+                    for meal_soup in day_soup.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3"):
+                        meal = Meal(meal_soup.get_text(), day)
+                        meal.oid = find_oid(meal_soup)
+                        meal.items = await self.get_items(meal)
+                        meal.items_status = Meal.ITEMS_AVAILABLE if meal.items else Meal.ITEMS_NOT_LISTED
+                        unit_menu[day][meal.name] = meal
 
             # Get the times
             response = await post(self._session, f"{self.MENU_URL}/Unit/GetHoursOfOperationMarkup",
