@@ -27,6 +27,15 @@ class MenuNotAvailable(MenuNotFound):
         super().__init__(unit, message)
 
 
+class UnitClosed(UnitNotFound):
+    def __init__(self, unit, message="{} is currently closed.", reason=""):
+        if reason:
+            message = "{} is currently closed due to {}."
+            super().__init__(unit, message.format("{}", reason))
+        else:
+            super().__init__(unit, message)
+
+
 # Classes
 class Meal:
     COLORS = {"Breakfast": 0xEABA38,
@@ -122,6 +131,7 @@ class Dining(commands.Cog):
 
         self._units = reader(f"{_dir}/units")
         self._unit_oids = reader(f"{_dir}/unit_oids")
+        self._unit_conditions = reader(f"{_dir}/unit_conditions")
 
         self._food_trucks = reader(f"{_dir}/food_trucks")
         self._meals = reader(f"{_dir}/meals")
@@ -409,9 +419,18 @@ class Dining(commands.Cog):
         fields = {underline(str(meal)): meal.status}
         fields.update({header: ", ".join(text) for header, text in items.items()})
         embed = self.generate_embed(title=unit, url=self.MENU_URL, color=meal.color, fields=fields)
-        embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
+        embed.set_footer(text=self.menu_footer(unit))
 
         return embed
+
+    def menu_footer(self, unit):
+        condition = self._unit_conditions.get(unit, "")
+        if "Closed due to" == condition[:13]:
+            raise UnitClosed(unit, reason=condition[14:])
+        elif condition:
+            return condition
+        else:
+            return self._last_fetch.strftime("Last updated on %b %d at %I:%M %p")
 
     def menu_list(self, unit=None, day=None):
         if unit is None and day is None:
@@ -433,13 +452,13 @@ class Dining(commands.Cog):
                                                                          for name, meal in unit_menu[day].items())}
             embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR,
                                         fields=fields, inline=True)
-            embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
+            embed.set_footer(text=self.menu_footer(unit))
         else:
             # The day's listing
             fields = {str(meal): ", ".join(item for item in meal.items.keys())
                       for name, meal in self._menu[unit][day].items() if meal.items_status == Meal.ITEMS_AVAILABLE}
             embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR, fields=fields)
-            embed.set_footer(text=self._last_fetch.strftime("Last updated on %b %d at %I:%M %p"))
+            embed.set_footer(text=self.menu_footer(unit))
 
         return embed
 
