@@ -123,6 +123,7 @@ class Dining(commands.Cog):
     RETRY_DELAY = 600
     MAX_RETRIES = 3
 
+    MIN_MENU_AGE = 80000
     MIN_SINCE = 3600
 
     def __init__(self, bot):
@@ -140,7 +141,7 @@ class Dining(commands.Cog):
 
         self._menu = {}
         self._retries = 0
-        self._last_fetch = datetime.datetime.now()
+        self._timestamp = datetime.datetime.now()
 
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=256):
@@ -251,8 +252,15 @@ class Dining(commands.Cog):
             # Success check
             if not self._menu or menu:
                 self._menu = menu
+                self._timestamp = datetime.datetime.now()
+
+                self._menu["Retries"] = self._retries
+                self._menu["Timestamp"] = self._timestamp
                 self._retries = 0
-                self._last_fetch = datetime.datetime.now()
+
+                # Save new menu
+                with open(f"{_dir}/menu.pickle", "wb") as menu_pickle:
+                    pickle.dump(self._menu, menu_pickle)
 
                 # Schedule the next fetch
                 self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
@@ -260,13 +268,28 @@ class Dining(commands.Cog):
 
         except aiohttp.ClientConnectionError:
             # Need to restart the fetch
+            print("VandyBot could not access the NetNutrition server.")
+            pass
+
+        except MenuNotFound:
+            # Why are you blank?
             pass
 
         # Fetch failed for some reason
         if self._retries < self.MAX_RETRIES or not self._menu:
+            # Can keep trying
+            print(f"Trying again in {self.RETRY_DELAY} seconds...")
             await asyncio.sleep(self.RETRY_DELAY)
             self._retries += 1
             await self.get_menu()
+        elif self._retries >= self.MAX_RETRIES:
+            # Give up, use the old one
+            with open(f"{_dir}/menu.pickle") as menu_pickle:
+                self._menu = pickle.load(menu_pickle)
+
+            self._retries = 0
+            self._timestamp = self._menu["Timestamp"]
+            print(f"Retries failed. Using cached menu from {self._timestamp}.")
 
     async def get_unit_menu(self, unit):
         unit_oid = self._unit_oids[unit]
@@ -349,9 +372,14 @@ class Dining(commands.Cog):
             pass
 
         await self.reset()
+        if not unit_menu:
+            print(f"VandyBot could not fetch the menu for {unit}.")
+            raise MenuNotFound(unit) from None
+
         return unit_menu
 
     async def startup(self):
+        print("Starting the Dining cog...")
         await self.get_menu()
 
     async def reset(self):
@@ -430,7 +458,7 @@ class Dining(commands.Cog):
         elif condition:
             return condition
         else:
-            return self._last_fetch.strftime("Last updated on %b %d at %I:%M %p")
+            return self._timestamp.strftime("Last updated on %b %d at %I:%M %p")
 
     def menu_list(self, unit=None, day=None):
         if unit is None and day is None:
