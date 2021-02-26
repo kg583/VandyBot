@@ -43,6 +43,7 @@ class Covid(commands.Cog):
         return [[f"{entry[0]} - {entry[1]}", f"{entry[4]}/{entry[3]}", entry[5]] for entry in entries]
 
     async def startup(self):
+        print("Starting the Covid cog...")
         pass
 
     async def reset(self):

@@ -130,6 +130,7 @@ class Hours(commands.Cog):
         return hours[library], footers[library]
 
     async def startup(self):
+        print("Starting the Hours cog...")
         pass
 
     async def reset(self):
