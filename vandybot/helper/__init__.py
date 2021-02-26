@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import datetime
+import pickle
 
 from bs4 import BeautifulSoup
 from discord import Activity, ActivityType
