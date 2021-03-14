@@ -269,7 +269,6 @@ class Dining(commands.Cog):
         except aiohttp.ClientConnectionError:
             # Need to restart the fetch
             print("VandyBot could not access the NetNutrition server.")
-            pass
 
         except MenuNotFound:
             # Why are you blank?

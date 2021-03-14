@@ -44,7 +44,6 @@ class Covid(commands.Cog):
 
     async def startup(self):
         print("Starting the Covid cog...")
-        pass
 
     async def reset(self):
         pass

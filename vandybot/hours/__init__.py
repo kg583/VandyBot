@@ -131,7 +131,6 @@ class Hours(commands.Cog):
 
     async def startup(self):
         print("Starting the Hours cog...")
-        pass
 
     async def reset(self):
         # Because POST requests are bad and should feel bad
