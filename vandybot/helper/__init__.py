@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import copy
 import datetime
 import pickle
 
@@ -144,6 +145,9 @@ class Day:
 
     def __str__(self):
         return self.DAYS[self.day]
+
+    def __copy__(self):
+        return Day(self.DAYS[self.day])
 
     def __lt__(self, other):
         try:

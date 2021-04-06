@@ -50,6 +50,7 @@ class Meal:
     ITEMS_NOT_FOUND = 0
     ITEMS_NOT_LISTED = 1
     ITEMS_AVAILABLE = 2
+
     HOURS_NOT_FOUND = 0
     CLOSED = 1
     HOURS_AVAILABLE = 2
@@ -159,9 +160,10 @@ class Dining(commands.Cog):
         permitted = [Meal.ITEMS_AVAILABLE]
         if relaxed:
             # Second pass in case NetNutrition is truly delirious
-            permitted.append([Meal.ITEMS_NOT_LISTED])
+            permitted.append(Meal.ITEMS_NOT_LISTED)
 
-        day = start
+        # Fake shallow copy
+        day = copy.copy(start)
         if day == today():
             options = list(self._menu[unit][day].values()) if name is None else [self._menu[unit][day][name]]
             next_meal = first(meal for meal in sorted(options, key=lambda meal: meal.closes)
@@ -328,16 +330,20 @@ class Dining(commands.Cog):
                     # Is a day
                     day = Day(block)
                     unit_hours[day].append([])
+                    continue
                 except ValueError:
-                    try:
-                        # Is a time
-                        unit_hours[day][-1].append(Time(block))
-                    except ValueError:
-                        # Is a closed
-                        unit_hours[day][-1].append(block)
+                    pass
+
+                try:
+                    # Is a time
+                    unit_hours[day][-1].append(Time(block))
+                except ValueError:
+                    # Is a closed
+                    unit_hours[day][-1].append(block)
 
             # Match the times
             for day in unit_menu:
+                unit_hours[day] = sorted(unit_hours[day])
                 need_hours = [meal for name, meal in unit_menu[day].items()
                               if meal.items_status != Meal.ITEMS_NOT_FOUND and meal.name != Meal.DEFAULT]
                 need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
