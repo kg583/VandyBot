@@ -9,5 +9,3 @@ Branscomb Munchie: 14
 Common Grounds Munchie: 13
 Highland Munchie: 16
 Kissam Munchie: 15
-Quarantine/Isolation Meal: 9
-Blair PickUpSpot: 10

@@ -37,13 +37,3 @@ common-grounds-munchie: Common Grounds Munchie
 highland: Highland Munchie
 highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie
-blair-pickup: Blair PickUpSpot
-blair-pickupspot: Blair PickUpSpot
-blair-pickup-spot: Blair PickUpSpot
-blair-pick-up: Blair PickUpSpot
-blair-pick-upspot: Blair PickUpSpot
-blair-pick-up-spot: Blair PickUpSpot
-quarantine: Quarantine/Isolation Meal
-quarantine-meal: Quarantine/Isolation Meal
-isolation: Quarantine/Isolation Meal
-isolation-meal: Quarantine/Isolation Meal

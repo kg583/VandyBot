@@ -5,7 +5,6 @@ from discord.ext import commands
 from .helper import *
 
 # Import cogs
-from vandybot.covid import Covid
 from vandybot.dining import Dining
 from vandybot.hours import Hours
 
@@ -17,6 +16,10 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX),
 tokens = env_file.get()
 DEBUGGING = tokens.get("DEBUGGING", "False") == "True"
 DEBUG_GUILD_ID = int(tokens.get("DEBUG_GUILD_ID", "0"))
+
+TOKEN = tokens.get("BOT_TOKEN")
+if DEBUGGING:
+    TOKEN = tokens.get("DEBUG_BOT_TOKEN", TOKEN)
 
 
 @bot.event
@@ -70,7 +73,6 @@ def startup():
     print(f"DEBUG MODE == {DEBUGGING}")
 
     # Establish cogs
-    bot.add_cog(Covid(bot))
     bot.add_cog(Dining(bot))
     bot.add_cog(Hours(bot))
 
@@ -85,5 +87,5 @@ async def main():
 
     # Connect
     print("VandyBot is connecting...")
-    await bot.login(tokens["BOT_TOKEN"], bot=True)
+    await bot.login(TOKEN, bot=True)
     await bot.connect(reconnect=True)

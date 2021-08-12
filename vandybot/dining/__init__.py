@@ -40,6 +40,7 @@ class Meal:
     ITEMS_NOT_FOUND = 0
     ITEMS_NOT_LISTED = 1
     ITEMS_AVAILABLE = 2
+
     HOURS_NOT_FOUND = 0
     CLOSED = 1
     HOURS_AVAILABLE = 2
@@ -330,7 +331,8 @@ class Dining(commands.Cog):
         return unit_menu
 
     async def startup(self):
-        await self.get_menu()
+        # await self.get_menu()
+        pass
 
     async def reset(self):
         # Because POST requests are bad and should feel bad
