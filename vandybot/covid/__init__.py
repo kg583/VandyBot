@@ -21,7 +21,7 @@ class Covid(commands.Cog):
         for index, header in enumerate(headers):
             embed.add_field(name=header, value="\n".join(row[index] for row in rows))
 
-        embed.set_footer(text="Mandatory weekly testing has concluded for the semester.")
+        embed.set_footer(text="Symptomatic test results are not yet fully disclosed")
         return embed
 
     @staticmethod
@@ -32,29 +32,29 @@ class Covid(commands.Cog):
         response = await fetch(self._session, self.URL)
         soup = BeautifulSoup(response, "html.parser")
         rows = soup.find("table").find_all("tr")
-        entries = [[entry.get_text() for entry in row.find_all("td")] for row in rows][1:][::-1]
+        entries = [[entry.get_text().split(" ")[0] for entry in row.find_all("td")] for row in rows][1:][::-1]
 
         # Calculate total
-        total = ["TOTAL", self.sum_column(entries, 1), self.sum_column(entries, 2)]
-        total.append(f"{100 * total[2] / total[1]:.2f}%")
-        total = list(map(bold, [total[0], f"{total[1]:,}", f"{total[2]:,}", str(total[3])]))
+        total = ["1/10/21", "Present", self.sum_column(entries, 3), self.sum_column(entries, 4)]
+        total.append(f"{100 * total[3] / total[2]:.2f}%")
+        total = list(map(bold, [total[0], total[1], "", f"{total[2]:,}", f"{total[3]:,}", total[4]]))
         entries.append(total)
 
-        return [[entry[0], f"{entry[2]}/{entry[1]}", entry[3]] for entry in entries]
+        return [[f"{entry[0]} - {entry[1]}", f"{entry[4]}/{entry[3]}", entry[5]] for entry in entries]
 
     async def startup(self):
-        pass
+        print("Starting the Covid cog...")
 
     async def reset(self):
         pass
 
     @commands.command(name="covid",
-                      brief="Gets current statistics on COVID-19 cases.",
+                      brief="Gets current statistics on COVID-19 cases",
                       help="Retrieves the statistics to-date for COVID-19 tests and positive cases among Vanderbilt "
                            "students, as well as an overall summary of the data.",
                       usage="")
     async def covid(self, ctx):
         data = await self.get_data()
-        embed = self.generate_embed(title="COVID-19 Dashboard", url=self.URL,
-                                    headers=("Week", "Test Results", "Positivity Rate"), rows=data)
+        headers = tuple(map(underline, ("Period", "Asymp. Positives", "Asymp. Positivity")))
+        embed = self.generate_embed(title="COVID-19 Dashboard", url=self.URL, headers=headers, rows=data)
         await ctx.send(embed=embed)

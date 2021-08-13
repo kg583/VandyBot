@@ -1,12 +1,16 @@
 import aiohttp
 import asyncio
-from bs4 import BeautifulSoup
-from collections import OrderedDict
+import copy
 import datetime
+import pickle
+
+from bs4 import BeautifulSoup
+from discord import Activity, ActivityType
 
 
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
+DEFAULT_TEXT = "Type ~help for usage!"
 
 # GitHub directory
 GITHUB_RAW = "https://raw.githubusercontent.com/kg583/VandyBot/master"
@@ -100,8 +104,12 @@ async def schedule(coro, times):
     await coro()
 
 
+def presence(text):
+    return Activity(type=ActivityType.playing, name=text)
+
+
 def time_on(date, time):
-    return datetime.datetime(*date.date().timetuple()[:3], time.hour, time.minute, time.second)
+    return datetime.datetime(*date.timetuple()[:3], time.hour, time.minute, time.second)
 
 
 def to_time(time):
@@ -138,10 +146,31 @@ class Day:
     def __str__(self):
         return self.DAYS[self.day]
 
+    def __copy__(self):
+        return Day(self.DAYS[self.day])
+
+    def __lt__(self, other):
+        try:
+            return self.relative_day < other.relative_day
+        except AttributeError:
+            return False
+
+    def __le__(self, other):
+        return self < other or self == other
+
     def __eq__(self, other):
         try:
             return int(self) == int(other)
         except ValueError:
+            return False
+
+    def __ge__(self, other):
+        return self > other or self == other
+
+    def __gt__(self, other):
+        try:
+            return self.relative_day > other.relative_day
+        except AttributeError:
             return False
 
     def __add__(self, other):
@@ -159,6 +188,10 @@ class Day:
         self.day -= int(other)
         self.day %= 7
         return self
+
+    @property
+    def relative_day(self):
+        return (self.day - int(datetime.datetime.now().strftime("%w"))) % 7
 
 
 def today():

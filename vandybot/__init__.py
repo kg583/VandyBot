@@ -1,5 +1,5 @@
 import env_file
-from discord import Activity, ActivityType, Embed
+from discord import Embed
 from discord.ext import commands
 
 from .helper import *
@@ -25,8 +25,8 @@ if DEBUGGING:
 @bot.event
 async def on_ready():
     print("VandyBot has connected. Awaiting command requests...")
-    activity = "Type ~help for usage!" if not DEBUGGING else "Currently undergoing maintenance"
-    await bot.change_presence(activity=Activity(type=ActivityType.playing, name=activity))
+    text = DEFAULT_TEXT if not DEBUGGING else "Currently undergoing maintenance"
+    await bot.change_presence(activity=presence(text))
 
 
 @bot.event
@@ -51,7 +51,7 @@ async def on_command_error(ctx, error):
 
 @bot.command(name="github",
              aliases=("code",),
-             brief="VandyBot's GitHub repository.",
+             brief="VandyBot's GitHub repository",
              help="Returns the link to VandyBot's GitHub repository.")
 async def github(ctx):
     embed = Embed(title="VandyBot on GitHub", url=GITHUB_URL, color=DEFAULT_COLOR)
@@ -62,7 +62,7 @@ async def github(ctx):
 
 
 @bot.command(name="ping",
-             brief="Pings the VandyBot client.",
+             brief="Pings the VandyBot client",
              help="Returns the current latency to the VandyBot client.")
 async def ping(ctx):
     await ctx.send(f"~pong ({bot.latency * 1000:.3f}ms)")

@@ -22,6 +22,15 @@ class UnitNotFound(HoursError):
         super().__init__(message.format(unit))
 
 
+class UnitClosed(UnitNotFound):
+    def __init__(self, unit, message="{} is currently closed.", reason=""):
+        if reason:
+            message = "{} is currently closed due to {}."
+            super().__init__(unit, message.format("{}", reason))
+        else:
+            super().__init__(unit, message)
+
+
 # Main Cog
 class Hours(commands.Cog):
     # URL stuff
@@ -38,6 +47,7 @@ class Hours(commands.Cog):
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
         self._post_offices = reader(f"{_dir}/post_offices")
+        self._loc_conditions = reader(f"{_dir}/loc_conditions")
 
         self._post_office_hours = reader(f"{_dir}/post_office_hours")
 
@@ -94,7 +104,7 @@ class Hours(commands.Cog):
 
             index += 1
 
-        return hours, "Reported hours do not necessarily reflect unexpected closures or holidays."
+        return hours, "Dining areas may be open to students between listed meal times"
 
     async def get_dining_unit_oid(self, unit):
         response = await fetch(self._session, self.DINING_URL)
@@ -120,14 +130,14 @@ class Hours(commands.Cog):
         return hours[library], footers[library]
 
     async def startup(self):
-        pass
+        print("Starting the Hours cog...")
 
     async def reset(self):
         # Because POST requests are bad and should feel bad
         await self._session.post(self.DINING_URL + "/Home/ResetSelections", headers=self.DINING_HEADER)
 
     @commands.command(name="hours",
-                      brief="Gets the operating hours for various on-campus facilities.",
+                      brief="Gets the operating hours for various on-campus facilities",
                       help="Retrieves the operating hours on a given day for on-campus dining centers and libraries. "
                            "Arguments can be specified in any order.",
                       usage="location [day=today]\n"
@@ -149,7 +159,7 @@ class Hours(commands.Cog):
                     all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
                                  if " - " in time else ["Closed"]
                                  for day, time in self._post_office_hours.items()}
-                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays."
+                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays"
                     url = self.POST_OFFICE_URL
                 else:
                     raise UnitNotFound(loc)
@@ -160,13 +170,20 @@ class Hours(commands.Cog):
                     except KeyError:
                         raise HoursNotFound(loc)
 
-                    if "Closed" in loc_hours:
-                        fields = {f"Hours on {day}": "CLOSED"}
-                    else:
-                        fields = {f"Hours on {day}": "\n".join("{} to {}".format(*span) for span in loc_hours)}
-
+                    fields = {underline(f"Hours on {day}"): "CLOSED" if "Closed" in loc_hours else "\n".join(
+                        "{} to {}".format(*span) for span in loc_hours)}
+                    footer = self.hours_footer(loc, footer)
                     embed = self.generate_embed(title=loc, url=url, fields=fields, footer=footer)
                     await ctx.send(embed=embed)
+
+    def hours_footer(self, loc, default):
+        condition = self._loc_conditions.get(loc, "")
+        if "Closed due to" == condition[:13]:
+            raise UnitClosed(loc, reason=condition[14:])
+        elif condition:
+            return condition
+        else:
+            return default
 
     def hours_from_dining(self, unit):
         async def dispatcher(ctx, hour_arg, *args):

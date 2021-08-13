@@ -31,43 +31,20 @@ local-java: Local Java Cafe
 java: Local Java Cafe
 branscomb: Branscomb Munchie
 branscomb-munchie: Branscomb Munchie
-commons-market: Common Grounds Market
-commons-munchie: Common Grounds Market
-common-grounds: Common Grounds Market
-common-grounds-market: Common Grounds Market
-highland: Highland Market
-highland-munchie: Highland Market
-highland-market: Highland Market
+commons-munchie: Common Grounds Munchie
+common-grounds: Common Grounds Munchie
+common-grounds-munchie: Common Grounds Munchie
+highland: Highland Munchie
+highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie
-branscomb-pickup: Branscomb PickUpSpot
-branscomb-pickupspot: Branscomb PickUpSpot
-branscomb-pickup-spot: Branscomb PickUpSpot
-branscomb-pick-up: Branscomb PickUpSpot
-branscomb-pick-upspot: Branscomb PickUpSpot
-branscomb-pick-up-spot: Branscomb PickUpSpot
+blair: Blair PickUpSpot
 blair-pickup: Blair PickUpSpot
 blair-pickupspot: Blair PickUpSpot
 blair-pickup-spot: Blair PickUpSpot
 blair-pick-up: Blair PickUpSpot
 blair-pick-upspot: Blair PickUpSpot
 blair-pick-up-spot: Blair PickUpSpot
-suzie-alumni: Suzie's at Alumni
-suzies-alumni: Suzie's at Alumni
-suzies-at-alumni: Suzie's at Alumni
-grins: Grins Vegetarian Cafe
-grins-vegetarian: Grins Vegetarian Cafe
-grins-cafe: Grins Vegetarian Cafe
-grins-vegetarian-cafe: Grins Vegetarian Cafe
-aryeh: Aryeh's Food Truck
-aryehs: Aryeh's Food Truck
-aryeh-food-truck: Aryeh's Food Truck
-aryehs-food-truck: Aryeh's Food Truck
-holy-smokes: Aryeh's Food Truck
-suzie-stevenson: Suzie's at Stevenson Library
-suzies-stevenson: Suzie's at Stevenson Library
-suzie-stevenson-library: Suzie's at Stevenson Library
-suzies-stevenson-library: Suzie's at Stevenson Library
-suzie-at-stevenson: Suzie's at Stevenson Library
-suzies-at-stevenson: Suzie's at Stevenson Library
-suzie-at-stevenson-library: Suzie's at Stevenson Library
-suzies-at-stevenson-library: Suzie's at Stevenson Library
+quarantine: Quarantine/Isolation Meal
+quarantine-meal: Quarantine/Isolation Meal
+isolation: Quarantine/Isolation Meal
+isolation-meal: Quarantine/Isolation Meal
