@@ -1,8 +1,8 @@
-breakfast: Breakfast
-brunch: Brunch
-lunch: Lunch
-dinner: Dinner
-tonight: Dinner
-daily: Daily Offerings
-daily-offerings: Daily Offerings
-offerings: Daily Offerings
+breakfast: breakfast
+brunch: brunch
+lunch: lunch
+dinner: dinner
+tonight: dinner
+daily: daily-offerings
+daily-offerings: daily-offerings
+offerings: daily-offerings

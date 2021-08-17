@@ -86,6 +86,10 @@ async def post(session, url, data=None, headers=None):
         return text.encode().decode("unicode-escape")
 
 
+def presence(text):
+    return Activity(type=ActivityType.playing, name=text)
+
+
 def reader(filename):
     entries = {}
     with open(f"{filename}.txt") as file:
@@ -96,16 +100,21 @@ def reader(filename):
     return entries
 
 
+def reduce(arg, mode="dining"):
+    removals = {"dining": ["cafe", "center", "dining", "hall"]}
+    arg = arg.lower().replace("'", "").translate(SEPS)
+    for removal in removals[mode]:
+        arg = arg.replace(removal, "")
+
+    return arg
+
+
 async def schedule(coro, times):
     times = [time_on(datetime.datetime.now(), time) for time in times]
     times.append(times[0] + datetime.timedelta(days=1))
     times_until = [time - datetime.datetime.now() for time in times]
     await asyncio.sleep(min(time_until for time_until in times_until if time_until.days >= 0).seconds)
     await coro()
-
-
-def presence(text):
-    return Activity(type=ActivityType.playing, name=text)
 
 
 def time_on(date, time):
@@ -116,6 +125,14 @@ def to_time(time):
     hour = time[:-2] + (":00" if ":" not in time else "")
     period = time[-2:].upper()
     return Time(hour + " " + period)
+
+
+# Slugs are lame
+UNIT_NAMES = reader(f"vandybot/helper/dining")
+
+
+def unit_name(unit):
+    return UNIT_NAMES.get(unit, unit)
 
 
 class TooManySelections(Exception):
@@ -190,8 +207,19 @@ class Day:
         return self
 
     @property
+    def is_today(self):
+        return self == today()
+
+    @property
+    def is_tomorrow(self):
+        return self == tomorrow()
+
+    @property
     def relative_day(self):
         return (self.day - int(datetime.datetime.now().strftime("%w"))) % 7
+
+
+now = datetime.datetime.now
 
 
 def today():
@@ -202,7 +230,7 @@ def tomorrow():
     return today() + 1
 
 
-week = tuple(map(Day, Day.DAYS))
+week = tuple(map(Day, Day.DAYS[:7]))
 weekend = (Day("Saturday"), Day("Sunday"))
 
 

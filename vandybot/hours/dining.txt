@@ -1,32 +1,20 @@
 2301: 2301
 rand: Rand Dining Center
-rand-dining: Rand Dining Center
-rand-dining-center: Rand Dining Center
 commons: The Commons Dining Center
-commons-dining: The Commons Dining Center
-commons-dining-center: The Commons Dining Center
-the-commons-dining-center: The Commons Dining Center
+the-commons: The Commons Dining Center
 ebi: E. Bronson Ingram Dining Center
-ingram-dining: E. Bronson Ingram Dining Center
-bronson-ingram-dining: E. Bronson Ingram Dining Center
+ingram: E. Bronson Ingram Dining Center
+bronson-ingram: E. Bronson Ingram Dining Center
 e.-bronson-ingram: E. Bronson Ingram Dining Center
-e.-bronson-ingram-dining: E. Bronson Ingram Dining Center
 e-bronson-ingram: E. Bronson Ingram Dining Center
-e-bronson-ingram-dining: E. Bronson Ingram Dining Center
-ingram-dining-center: E. Bronson Ingram Dining Center
-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
-e.-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
-e-bronson-ingram-dining-center: E. Bronson Ingram Dining Center
 kissam: The Kitchen at Kissam
 kitchen: The Kitchen at Kissam
 the-kitchen: The Kitchen at Kissam
 kissam-kitchen: The Kitchen at Kissam
+kitchen-kissamn: The Kitchen at Kissam
 kitchen-at-kissam: The Kitchen at Kissam
 the-kitchen-at-kissam: The Kitchen at Kissam
 zeppos: Zeppos Dining
-zeppos-dining: Zeppos Dining
-zeppos-dining-center: Zeppos Dining
-local-java-cafe: Local Java Cafe
 local-java: Local Java Cafe
 java: Local Java Cafe
 branscomb: Branscomb Munchie
@@ -37,14 +25,22 @@ common-grounds-munchie: Common Grounds Munchie
 highland: Highland Munchie
 highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie
-blair: Blair PickUpSpot
-blair-pickup: Blair PickUpSpot
-blair-pickupspot: Blair PickUpSpot
-blair-pickup-spot: Blair PickUpSpot
-blair-pick-up: Blair PickUpSpot
-blair-pick-upspot: Blair PickUpSpot
-blair-pick-up-spot: Blair PickUpSpot
-quarantine: Quarantine/Isolation Meal
-quarantine-meal: Quarantine/Isolation Meal
-isolation: Quarantine/Isolation Meal
-isolation-meal: Quarantine/Isolation Meal
+alumni: Alumni Cafe
+alumni-cafe: Alumni Cafe
+suzie-food-for-thought: Suzie's Food for Thought Cafe
+suzies-food-for-thought: Suzie's Food for Thought Cafe
+suzie-central: Suzie's Food for Thought Cafe
+suzies-central: Suzie's Food for Thought Cafe
+suzie-central-library: Suzie's Food for Thought Cafe
+suzies-central-library: Suzie's Food for Thought Cafe
+suzie-blair: Suzie's Blair School of Music
+suzies-blair: Suzie's Blair School of Music
+suzie-music: Suzie's Blair School of Music
+suzies-music: Suzie's Blair School of Music
+holy-smokes: Holy Smokes Kosher Food Truck
+suzie-mrb: Suzie's MRB III
+suzies-mrb: Suzie's MRB III
+grins: Grins Vegetarian Cafe
+grins-vegetarian: Grins Vegetarian Cafe
+suzie-featheringill: Suzie’s Featheringill
+suzies-featheringill: Suzie’s Featheringill

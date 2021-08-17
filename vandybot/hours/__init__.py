@@ -81,7 +81,8 @@ class Hours(commands.Cog):
 
         return embed
 
-    async def get_dining_hours(self, unit_oid):
+    async def get_dining_hours(self, unit: str):
+        unit_oid = await self.get_dining_unit_oid(unit)
         response = await post(self._session, f"{self.DINING_URL}/Unit/GetHoursOfOperationMarkup",
                               data={"unitOid": unit_oid},
                               headers=self.DINING_HEADER)
@@ -106,16 +107,19 @@ class Hours(commands.Cog):
 
         return hours, "Dining areas may be open to students between listed meal times"
 
-    async def get_dining_unit_oid(self, unit):
+    async def get_dining_hours_dispatch(self, slug: str):
+        return (await self.get_dining_hours(unit_name(slug)))[0]
+
+    async def get_dining_unit_oid(self, loc: str):
         response = await fetch(self._session, self.DINING_URL)
         soup = BeautifulSoup(response, "html.parser")
         units = {unit.get_text(): find_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
         try:
-            return units[unit]
+            return units[loc]
         except KeyError:
-            raise UnitNotFound(unit) from None
+            raise UnitNotFound(loc) from None
 
-    async def get_library_hours(self, library):
+    async def get_library_hours(self, library: str):
         response = await fetch(self._session, self.LIBRARY_URL)
         soup = BeautifulSoup(response, "html.parser")
 
@@ -152,8 +156,7 @@ class Hours(commands.Cog):
                     all_hours, footer = await self.get_library_hours(loc)
                     url = self.DINING_URL
                 elif loc in self._dining.values():
-                    unit_oid = await self.get_dining_unit_oid(loc)
-                    all_hours, footer = await self.get_dining_hours(unit_oid)
+                    all_hours, footer = await self.get_dining_hours(loc)
                     url = self.LIBRARY_URL
                 elif loc in self._post_offices.values():
                     all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
@@ -176,7 +179,7 @@ class Hours(commands.Cog):
                     embed = self.generate_embed(title=loc, url=url, fields=fields, footer=footer)
                     await ctx.send(embed=embed)
 
-    def hours_footer(self, loc, default):
+    def hours_footer(self, loc: str, default: str):
         condition = self._loc_conditions.get(loc, "")
         if "Closed due to" == condition[:13]:
             raise UnitClosed(loc, reason=condition[14:])
@@ -185,8 +188,8 @@ class Hours(commands.Cog):
         else:
             return default
 
-    def hours_from_dining(self, unit):
-        async def dispatcher(ctx, hour_arg, *args):
+    def hours_from_dining(self, unit: str):
+        async def dispatcher(ctx, hour_arg: str, *args):
             if hour_arg.lower() != "hours":
                 if hour_arg.lower() != "menu":
                     raise commands.BadArgument(f"Scope not provided. Use `~{unit} menu` or `~{unit} hours`.")
@@ -198,8 +201,8 @@ class Hours(commands.Cog):
 
         return dispatcher
 
-    def hours_from_library(self, unit):
-        async def dispatcher(ctx, hour_arg, *args):
+    def hours_from_library(self, unit: str):
+        async def dispatcher(ctx, hour_arg: str, *args):
             if hour_arg.lower() != "hours":
                 raise commands.BadArgument(f"Scope not provided. Use `~hours {unit}` or `~{unit} hours`.")
             else:
@@ -226,7 +229,7 @@ class Hours(commands.Cog):
 
         # Args can be in any order
         for arg in args:
-            arg = arg.lower().replace("'", "").translate(SEPS)
+            arg = reduce(arg)
             try:
                 # Is a dining unit?
                 locs.append(self._dining[arg])

@@ -78,9 +78,6 @@ def startup():
 
 
 async def main():
-    if "ASP_NET_SESSION_ID" in tokens:
-        await bot.get_cog("Dining").get_cookie(default=tokens["ASP_NET_SESSION_ID"])
-
     # Start cogs
     for cog in bot.cogs:
         await bot.get_cog(cog).startup()

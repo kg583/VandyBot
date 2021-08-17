@@ -25,6 +25,7 @@ pie-town: Pie Town Tacos
 pie-town-taco: Pie Town Tacos
 pie-town-tacos: Pie Town Tacos
 pucketts: Pucketts
+puckett: Pucketts
 roscoes: Roscoe’s Smoked BBQ
 roscoes-bbq: Roscoe’s Smoked BBQ
 roscoes-smoked-bbq: Roscoe’s Smoked BBQ

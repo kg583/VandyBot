@@ -1,5 +1,2 @@
-Dining Centers: `rand`\n`commons`\n`ebi`\n`zeppos`\n`2301`
-Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kissam-munchie`
-Retail Dining: `local-java`\n`kissam`
+Dining Centers: `2301`\n`commons`\n`ebi`\n`kissam`\n`rand`\n`zeppos`
 Food Trucks: `buns-on-the-run`\n`califarmia`\n`chicken-shack`\n`culinary-creations`\n`delicias-colombianas`\n`florindas`\n`jays-chicago`\n`chicken-and-waffles`\n`pie-town-tacos`\n`pucketts`\n`roscoes`\n`smokin-buttz`\n`love-bus`\n`the-steaming-goat`\n`yayos`
-Other: `blair-pickup`\n`quarantine`

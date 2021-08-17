@@ -8,18 +8,18 @@ _dir = "vandybot/dining"
 
 # Errors
 class MenuError(Exception):
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 
 class MenuNotFound(MenuError):
     def __init__(self, unit, message="No menu selections at {} could be found for the requested meal."):
-        super().__init__(message.format(unit))
+        super().__init__(message.format(unit_name(unit)))
 
 
 class UnitNotFound(MenuError):
     def __init__(self, unit, message="The dining facility of {} could not be found."):
-        super().__init__(message.format(unit))
+        super().__init__(message.format(unit_name(unit)))
 
 
 class MenuNotAvailable(MenuNotFound):
@@ -36,15 +36,16 @@ class UnitClosed(UnitNotFound):
             super().__init__(unit, message)
 
 
-# Classes
 class Meal:
-    COLORS = {"Breakfast": 0xEABA38,
-              "Lunch": 0xCC2537,
-              "Dinner": 0x9013FE,
-              "Brunch": 0xF16907,
-              "Daily Offerings": 0x4A90E2}
-    DEFAULT = "Daily Offerings"
-    ORDER_URL = "https://get.cbord.com/vanderbilt/full/food_home.php"
+    COLORS = {
+        "breakfast": 0xEABA38,
+        "lunch": 0xCC2537,
+        "dinner": 0x9013FE,
+        "brunch": 0xF16907,
+        "daily-offerings": 0x4A90E2
+    }
+    ORDER = ["breakfast", "brunch", "lunch", "dinner", "daily-offerings"]
+    DEFAULT = "daily-offerings"
 
     # Fake enum
     ITEMS_NOT_FOUND = 0
@@ -55,10 +56,10 @@ class Meal:
     CLOSED = 1
     HOURS_AVAILABLE = 2
 
-    def __init__(self, name, day):
-        self.name = name
-        self.oid = 0
-        self.color = self.COLORS.get(self.name, DEFAULT_COLOR)
+    def __init__(self, slug: str, day: Day):
+        self.slug = slug
+        self.name = " ".join(map(str.capitalize, slug.split("-")))
+        self.color = self.COLORS.get(self.slug, DEFAULT_COLOR)
         self.day = day
 
         self.opens = Time.MAX
@@ -67,12 +68,14 @@ class Meal:
 
         self.items = {}
         self.items_status = self.ITEMS_NOT_FOUND
-        self.can_order = False
+
+    def __lt__(self, other):
+        return self.ORDER.index(self.slug) < self.ORDER.index(other.slug)
 
     def __str__(self):
-        if self.day == today():
+        if self.day.is_today:
             return f"{self.name} Today"
-        elif self.day == tomorrow():
+        elif self.day.is_tomorrow:
             return f"{self.name} Tomorrow"
         else:
             return f"{self.name} on {self.day}"
@@ -81,46 +84,64 @@ class Meal:
     def status(self):
         text = "Unavailable"
         if self.hours_status == self.HOURS_AVAILABLE and self.items_status != self.ITEMS_NOT_FOUND:
-            if datetime.datetime.now().time() < self.opens and self.day == today() or \
-                    datetime.datetime.now().time() > self.opens and self.day == tomorrow():
+            if now().time() < self.opens and self.day.is_today or \
+                    now().time() > self.opens and self.day.is_tomorrow:
                 text = f"CLOSED until {self.opens}"
-            elif datetime.datetime.now().time() > self.closes and self.day == today():
+            elif now().time() > self.closes and self.day.is_today:
                 text = f"CLOSED since {self.closes}"
-            elif self.opens <= datetime.datetime.now().time() <= self.closes and self.day == today():
+            elif self.opens <= now().time() <= self.closes and self.day.is_today:
                 text = f"OPEN until {self.closes}"
             else:
                 text = f"OPENS at {self.opens}"
         elif self.hours_status == self.HOURS_NOT_FOUND and self.items_status != self.ITEMS_NOT_FOUND:
             # This one shouldn't happen often
-            if self.day == today():
+            if self.day.is_today:
                 text = "OPEN today"
-            elif self.day == tomorrow():
+            elif self.day.is_tomorrow:
                 text = "OPEN tomorrow"
             else:
                 text = f"OPEN on {self.day}"
         elif self.hours_status == self.CLOSED:
             # This one shouldn't happen ever
-            if self.day == today():
+            if self.day.is_today:
                 text = "CLOSED today"
-            elif self.day == tomorrow():
+            elif self.day.is_tomorrow:
                 text = "CLOSED tomorrow"
             else:
                 text = f"CLOSED on {self.day}"
 
-        if self.can_order:
-            text += f"\n[Order now via GET]({self.ORDER_URL})"
-
         return text
+
+
+class Stations:
+    DEFAULT = "General Items"
+
+    def __init__(self):
+        self.names = {None: Stations.DEFAULT}
+        self.items = {None: []}
+
+    def __getitem__(self, item):
+        return self.items.get(item, [])
+
+    def __iter__(self):
+        for key in self.names:
+            if key is not None or self.items[key]:
+                yield self.names[key], self.items[key]
+
+    def __setitem__(self, key, value):
+        if key not in self.names.keys():
+            self.names.update({key: value})
+        else:
+            self.items.update({key: value})
 
 
 # Main Cog
 class Dining(commands.Cog):
     # URL stuff
     FOOD_TRUCK_URL = "https://campusdining.vanderbilt.edu/food-trucks/food-truck-menus/"
-    MENU_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
-    MENU_HEADER = {"Referer": MENU_URL}
+    MENU_URL = "https://vanderbilt.nutrislice.com"
 
-    SCHEDULE = [Time("4:18 AM")]
+    SCHEDULE = [Time("4:20 AM")]
     RETRY_DELAY = 600
     MAX_RETRIES = 3
 
@@ -131,21 +152,22 @@ class Dining(commands.Cog):
         self._bot = bot
         self._session = aiohttp.ClientSession()
 
-        self._units = reader(f"{_dir}/units")
-        self._unit_oids = reader(f"{_dir}/unit_oids")
+        self._unit_slugs = reader(f"{_dir}/units")
+        self._unit_set = set(self._unit_slugs.values())
         self._unit_conditions = reader(f"{_dir}/unit_conditions")
 
         self._food_trucks = reader(f"{_dir}/food_trucks")
-        self._meals = reader(f"{_dir}/meals")
+        self._meal_slugs = reader(f"{_dir}/meals")
+        self._meal_set = set(self._meal_slugs.values())
 
         self._list = reader(f"{_dir}/list")
 
         self._menu = {}
         self._retries = 0
-        self._timestamp = datetime.datetime.now()
+        self._timestamp = now()
 
     @staticmethod
-    def generate_embed(title, url, color, fields, inline=False, max_len=256):
+    def generate_embed(title, url, color, fields, inline=False, max_len=240):
         embed = Embed(title=title, url=url, color=color)
         embed.set_thumbnail(url=f"{GITHUB_RAW}/{_dir}/thumbnail.jpg")
         for header, text in fields.items():
@@ -156,126 +178,164 @@ class Dining(commands.Cog):
 
         return embed
 
-    def find_next_meal(self, unit, start, name=None, relaxed=False):
+    def find_next_meal(self, unit_slug: str, start: Day, meal_slug: str = None, relaxed=False):
         permitted = [Meal.ITEMS_AVAILABLE]
         if relaxed:
-            # Second pass in case NetNutrition is truly delirious
+            # Second pass in case NutriSlice is truly delirious
             permitted.append(Meal.ITEMS_NOT_LISTED)
 
         # Fake shallow copy
         day = copy.copy(start)
-        if day == today():
-            options = list(self._menu[unit][day].values()) if name is None else [self._menu[unit][day][name]]
-            next_meal = first(meal for meal in sorted(options, key=lambda meal: meal.closes)
-                              if meal.items_status in permitted and meal.closes > datetime.datetime.now().time())
+        if day.is_today:
+            options = list(self._menu[unit_slug][day].values())\
+                if meal_slug is None else [self._menu[unit_slug][day][meal_slug]]
+            next_meal = first(meal for meal in sorted(options, key=lambda meal: (meal.closes, meal))
+                              if meal.items_status in permitted and meal.closes > now().time())
             if next_meal is not None:
                 return next_meal
             day += 1
 
-        while day != today():
-            options = list(self._menu[unit][day].values()) if name is None else [self._menu[unit][day][name]]
-            next_meal = first(meal for meal in sorted(options, key=lambda meal: meal.opens)
+        while not day.is_today:
+            options = list(self._menu[unit_slug][day].values())\
+                if meal_slug is None else [self._menu[unit_slug][day][meal_slug]]
+            next_meal = first(meal for meal in sorted(options, key=lambda meal: (meal.opens, meal))
                               if meal.items_status in permitted)
             if next_meal is not None:
                 return next_meal
             day += 1
 
         if not relaxed:
-            return self.find_next_meal(unit, start, name=name, relaxed=True)
+            return self.find_next_meal(unit_slug, start, meal_slug=meal_slug, relaxed=True)
 
         # No one's around to help
-        raise MenuNotFound(unit) from None
+        raise MenuNotFound(unit_slug) from None
 
-    async def get_cookie(self, default=""):
-        cookies = {"CBORD.netnutrition2": "NNexternalID=vucampusdining",
-                   "ASP.NET_SessionId": default}
-        async with self._session.get(self.MENU_URL, params={"Access-Control-Allow-Credentials": "true"}) as response:
-            if response.status != 200:
-                return
-
-            try:
-                cookies["ASP.NET_SessionId"] = response.cookies["ASP.NET_SessionId"].coded_value
-            except KeyError:
-                pass
-
-            # Make new session with session cookie
-            if cookies["ASP.NET_SessionId"]:
-                await self._session.close()
-                self._session = aiohttp.ClientSession(cookies=cookies)
-
-    async def get_food_truck_menu(self, unit):
+    async def get_food_truck_menu(self, unit_slug: str):
         response = await fetch(self._session, self.FOOD_TRUCK_URL)
         soup = BeautifulSoup(response, "html.parser")
         food_trucks = {food_truck.get_text(): food_truck.find("a") for food_truck in soup.find_all("h4")}
 
         # Food trucks are special
         try:
-            menu = food_trucks[unit]
+            menu = food_trucks[unit_slug]
             if menu is None:
-                raise MenuNotAvailable(unit) from None
+                raise MenuNotAvailable(unit_slug) from None
             return menu["href"]
         except KeyError:
-            raise UnitNotFound(unit) from None
+            raise UnitNotFound(unit_slug) from None
 
-    async def get_items(self, meal):
-        response = await post(self._session, f"{self.MENU_URL}/Menu/SelectMenu",
-                              data={"menuOid": meal.oid},
-                              headers=self.MENU_HEADER)
-        soup = BeautifulSoup(response, "html.parser")
-        items = {}
-
-        # I don't think this default is ever used but just in case
-        current_item = "General Items"
-        for item in soup.find_all(class_=lambda c: c in ["cbo_nn_itemHover", "cbo_nn_itemGroupRow"]):
-            if item["class"][0] == "cbo_nn_itemGroupRow":
-                current_item = item.get_text()
-                if current_item == "None":
-                    # Sometimes headers just aren't labeled and it makes me sad
-                    current_item = meal.name
-                if "GET" in current_item:
-                    # GET App meals are special
-                    current_item = current_item.split("GET")[0] + "(GET)"
-                    meal.can_order = True
-            else:
-                items.update({current_item: items.get(current_item, []) + [item.get_text()]})
-
-        return dict(sorted(items.items()))
+    @staticmethod
+    def get_item_name(item: dict):
+        return item["name"].replace(" - Placeholder", "").replace(" - placeholder", "")
 
     async def get_menu(self):
         # Create blank menu
-        menu = {unit: {} for unit in self._units.values()}
-        await self.get_cookie()
+        menu = {unit_slug:
+                {day:
+                 {meal_slug: Meal(meal_slug, day) for meal_slug in self._meal_set}
+                 for day in week}
+                for unit_slug in self._unit_set}
 
         # Go through the units
         try:
-            for unit in set(self._units.values()):
-                menu[unit] = await self.get_unit_menu(unit)
+            for unit in await jfetch(self._session, f"{self.MENU_URL}/menu/api/schools"):
+                unit_slug = unit["slug"]
+                if unit_slug not in self._unit_set:
+                    print(f"Missing unit option: {unit_slug}")
+                    continue
 
-            # Success check
-            if not self._menu or menu:
-                self._menu = menu
-                self._timestamp = datetime.datetime.now()
+                unit_menu = menu[unit_slug]
+                unit_hours = await self._bot.get_cog("Hours").get_dining_hours_dispatch(unit_slug)
+                for meal in unit["active_menu_types"]:
+                    meal_slug = meal["slug"]
+                    if meal_slug not in self._meal_set:
+                        print(f"Missing meal option: {meal_slug}")
 
-                self._menu["Retries"] = self._retries
-                self._menu["Timestamp"] = self._timestamp
-                self._retries = 0
+                    year, month, day, *_ = datetime.date.today().timetuple()
+                    url = f"/menu/api/weeks/school/{unit_slug}/menu-type/{meal_slug}/{year}/{month}/{day}/"
+                    next_url = f"/menu/api/weeks/school/{unit_slug}/menu-type/{meal_slug}/{year}/{month}/{day + 7}/"
+                    in_week = False
 
-                # Save new menu
-                with open(f"{_dir}/menu.pickle", "wb") as menu_pickle:
-                    pickle.dump(self._menu, menu_pickle)
+                    for listing in (await jfetch(self._session, f"{self.MENU_URL}{url}"))["days"] +\
+                                   (await jfetch(self._session, f"{self.MENU_URL}{next_url}"))["days"]:
+                        day = Day(datetime.date.fromisoformat(listing["date"]).strftime("%A"))
+                        if day.is_today:
+                            in_week = not in_week
 
-                # Schedule the next fetch
-                self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
-                return
+                        if in_week:
+                            stations = Stations()
+
+                            for item in listing["menu_items"]:
+                                station_id = item["station_id"]
+                                if item["is_station_header"]:
+                                    stations[station_id] = item["text"]
+                                else:
+                                    stations[station_id] += [item["food"]]
+
+                            current = unit_menu[day][meal_slug]
+                            current.items = dict(stations)
+                            if current.items:
+                                current.items_status = Meal.ITEMS_AVAILABLE
+                            elif listing["has_unpublished_menus"]:
+                                current.items_status = Meal.ITEMS_NOT_LISTED
+                            else:
+                                current.items_status = Meal.ITEMS_NOT_FOUND
+
+                for day in week:
+                    need_hours = sorted([meal for meal in unit_menu[day].values() if
+                                         meal.items_status != Meal.ITEMS_NOT_FOUND and
+                                         meal.slug != Meal.DEFAULT])
+                    need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
+
+                    hour_index = 0
+                    hour_max = len(unit_hours[day])
+                    for current in need_hours:
+                        if len(need_hours) <= hour_max or \
+                                len(need_hours) > hour_max and current.items_status == Meal.ITEMS_AVAILABLE:
+                            # There are enough hours to go around
+                            try:
+                                current.opens, current.closes = unit_hours[day][hour_index]
+                                current.hours_status = Meal.HOURS_AVAILABLE
+                                hour_index += 1
+                            except ValueError:
+                                # Is a closed
+                                current.hours_status = Meal.CLOSED
+
+                        if hour_index >= hour_max:
+                            break
+
+                    # Set Daily Offerings hours
+                    if need_hours:
+                        default = unit_menu[day][Meal.DEFAULT]
+                        default.opens = min(meal.opens for meal in need_hours)
+                        default.closes = max(meal.closes for meal in need_hours)
+                        default.hours_status = Meal.HOURS_AVAILABLE
 
         except aiohttp.ClientConnectionError:
             # Need to restart the fetch
-            print("VandyBot could not access the NetNutrition server.")
+            print("VandyBot could not access the NutriSlice API server.")
+            await self.retry()
+            return
 
-        except MenuNotFound:
-            # Why are you blank?
-            pass
+        # Success check
+        if not self._menu or menu:
+            self._menu = menu
+            self._timestamp = now()
 
+            self._menu["Retries"] = self._retries
+            self._menu["Timestamp"] = self._timestamp
+            self._retries = 0
+
+            # Save new menu
+            with open(f"{_dir}/menu.pickle", "wb") as menu_pickle:
+                pickle.dump(self._menu, menu_pickle)
+
+            # Schedule the next fetch
+            self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
+        else:
+            await self.retry()
+
+    async def retry(self):
         # Fetch failed for some reason
         if self._retries < self.MAX_RETRIES or not self._menu:
             # Can keep trying
@@ -292,104 +352,9 @@ class Dining(commands.Cog):
             self._timestamp = self._menu["Timestamp"]
             print(f"Retries failed. Using cached menu from {self._timestamp}.")
 
-    async def get_unit_menu(self, unit):
-        unit_oid = self._unit_oids[unit]
-        unit_menu = {Day(day): {meal: Meal(meal, day) for meal in self._meals.values()}
-                     for day in Day.DAYS[:7]}
-
-        response = await post(self._session, f"{self.MENU_URL}/Unit/SelectUnitFromUnitsList",
-                              data={"unitOid": unit_oid},
-                              headers=self.MENU_HEADER)
-        soup = BeautifulSoup(response, "html.parser")
-        blocks = soup.find_all(class_="card-block")
-
-        # Menu without times
-        try:
-            for day_soup in blocks:
-                day = Day(day_soup.find("header").get_text().split(",")[0])
-                if day + 1 != today():
-                    # Awkward yesterday check
-                    for meal_soup in day_soup.find_all(class_="cbo_nn_menuLinkCell pr-3 pb-3"):
-                        meal = Meal(meal_soup.get_text(), day)
-                        meal.oid = find_oid(meal_soup)
-                        meal.items = await self.get_items(meal)
-                        meal.items_status = Meal.ITEMS_AVAILABLE if meal.items else Meal.ITEMS_NOT_LISTED
-                        unit_menu[day][meal.name] = meal
-
-            # Get the times
-            response = await post(self._session, f"{self.MENU_URL}/Unit/GetHoursOfOperationMarkup",
-                                  data={"unitOid": unit_oid},
-                                  headers=self.MENU_HEADER)
-            soup = BeautifulSoup(response, "html.parser")
-            unit_hours = {Day(day): [] for day in Day.DAYS[:7]}
-
-            # This default should never be used but just in case
-            day = Day("Monday")
-            for block in map(BeautifulSoup.get_text, soup.find_all("td")):
-                try:
-                    # Is a day
-                    day = Day(block)
-                    unit_hours[day].append([])
-                    continue
-                except ValueError:
-                    pass
-
-                try:
-                    # Is a time
-                    unit_hours[day][-1].append(Time(block))
-                except ValueError:
-                    # Is a closed
-                    unit_hours[day][-1].append(block)
-
-            # Match the times
-            for day in unit_menu:
-                unit_hours[day] = sorted(unit_hours[day])
-                need_hours = [meal for name, meal in unit_menu[day].items()
-                              if meal.items_status != Meal.ITEMS_NOT_FOUND and meal.name != Meal.DEFAULT]
-                need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
-
-                hour_index = 0
-                hour_max = len(unit_hours[day])
-                for meal in need_hours:
-                    if len(need_hours) <= hour_max or \
-                            len(need_hours) > hour_max and meal.items_status == Meal.ITEMS_AVAILABLE:
-                        # There are enough hours to go around
-                        try:
-                            meal.opens, meal.closes = unit_hours[day][hour_index][:2]
-                            meal.hours_status = Meal.HOURS_AVAILABLE
-                            hour_index += 1
-                        except ValueError:
-                            # Is a closed
-                            meal.hours_status = Meal.CLOSED
-
-                    if hour_index >= hour_max:
-                        break
-
-                # Set Daily Offerings hours
-                if need_hours:
-                    default = unit_menu[day][Meal.DEFAULT]
-                    default.opens = min(meal.opens for meal in need_hours)
-                    default.closes = max(meal.closes for meal in need_hours)
-                    default.hours_status = Meal.HOURS_AVAILABLE
-
-        except AttributeError:
-            # No menus are available
-            pass
-
-        await self.reset()
-        if not unit_menu:
-            print(f"VandyBot could not fetch the menu for {unit}.")
-            raise MenuNotFound(unit) from None
-
-        return unit_menu
-
     async def startup(self):
         print("Starting the Dining cog...")
         await self.get_menu()
-
-    async def reset(self):
-        # Because POST requests are bad and should feel bad
-        await self._session.post(self.MENU_URL + "/Home/ResetSelections", headers=self.MENU_HEADER)
 
     @commands.command(name="menu",
                       brief="Gets menus from on-campus dining locations",
@@ -402,71 +367,72 @@ class Dining(commands.Cog):
                             "~menu [location] list\n"
                             "~menu list")
     async def menu(self, ctx, *args):
-        units, days, names = self.menu_parse(args)
+        unit_slugs, days, meal_slugs = self.menu_parse(args)
 
-        for unit in units:
-            if unit == "list":
+        for unit_slug in unit_slugs:
+            if unit_slug == "list":
                 # Largest listing
                 embed = self.menu_list()
                 await ctx.send(embed=embed)
-            elif unit in self._food_trucks.values():
+            elif unit_slug in self._food_trucks.values():
                 # Food trucks are special
-                menu_img = await self.get_food_truck_menu(unit)
-                embed = Embed(title=unit, url=self.FOOD_TRUCK_URL, color=0x7ED321)
+                menu_img = await self.get_food_truck_menu(unit_slug)
+                embed = Embed(title=unit_slug, url=self.FOOD_TRUCK_URL, color=0x7ED321)
                 embed.set_image(url=menu_img)
                 embed.set_footer(text="Food trucks are available on campus on a rotating schedule")
                 await ctx.send(embed=embed)
             else:
                 for day in days:
                     if day == "list":
-                        embed = self.menu_list(unit)
+                        embed = self.menu_list(unit_slug)
                         await ctx.send(embed=embed)
-                        await asyncio.sleep(1)
                     else:
-                        for name in names:
-                            if name == "list":
-                                embed = self.menu_list(unit, day)
+                        for meal_slug in meal_slugs:
+                            if meal_slug == "list":
+                                embed = self.menu_list(unit_slug, day)
                             else:
-                                if name == "next":
-                                    meal = self.find_next_meal(unit, day)
+                                if meal_slug == "next":
+                                    meal = self.find_next_meal(unit_slug, day)
                                 else:
-                                    meal = self._menu[unit][day][name]
+                                    meal = self._menu[unit_slug][day][meal_slug]
 
                                 closing = time_on(datetime.date.today(), meal.closes)
                                 if meal.items_status == Meal.ITEMS_NOT_FOUND or \
-                                        (datetime.datetime.now() - closing).seconds > self.MIN_SINCE:
+                                        (now() - closing).seconds > self.MIN_SINCE:
                                     # Find next instance of that meal if possible
-                                    meal = self.find_next_meal(unit, day, meal.name)
+                                    meal = self.find_next_meal(unit_slug, day, meal.slug)
 
-                                embed = self.menu_dispatch(unit, meal)
+                                embed = self.menu_dispatch(unit_slug, meal)
 
                             await ctx.send(embed=embed)
-                            await asyncio.sleep(1)
 
-    def menu_dispatch(self, unit, meal):
+                    await asyncio.sleep(1)
+
+    def menu_dispatch(self, unit_slug: str, meal: Meal):
         if meal.items_status == Meal.ITEMS_NOT_LISTED:
             items = {"No Items Listed": "Please try again later."}
         else:
             items = meal.items
 
         fields = {underline(str(meal)): meal.status}
-        fields.update({header: ", ".join(text) for header, text in items.items()})
-        embed = self.generate_embed(title=unit, url=self.MENU_URL, color=meal.color, fields=fields)
-        embed.set_footer(text=self.menu_footer(unit))
+        fields.update({header: ", ".join(map(self.get_item_name, text)) for header, text in items.items()})
+        embed = self.generate_embed(title=unit_name(unit_slug), url=self.MENU_URL, color=meal.color,
+                                    fields=fields)
+        embed.set_footer(text=self.menu_footer(unit_slug))
 
         return embed
 
-    def menu_footer(self, unit):
-        condition = self._unit_conditions.get(unit, "")
+    def menu_footer(self, unit_slug: str):
+        condition = self._unit_conditions.get(unit_slug, "")
         if "Closed due to" == condition[:13]:
-            raise UnitClosed(unit, reason=condition[14:])
+            raise UnitClosed(unit_slug, reason=condition[14:])
         elif condition:
             return condition
         else:
             return self._timestamp.strftime("Last updated on %b %d at %I:%M %p")
 
-    def menu_list(self, unit=None, day=None):
-        if unit is None and day is None:
+    def menu_list(self, unit_slug: str = None, day: Day = None):
+        if unit_slug is None and day is None:
             # The master listing
             embed = self.generate_embed(title="On-Campus Dining Locations", url=self.MENU_URL, color=DEFAULT_COLOR,
                                         fields=self._list, inline=True)
@@ -478,40 +444,49 @@ class Dining(commands.Cog):
                             inline=False)
         elif day is None:
             # The week's listing
-            unit_menu = self._menu[unit]
-            fields = {underline(day): "\n".join(name for name in names
-                                                if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)
+            unit_menu = self._menu[unit_slug]
+            fields = {underline(day):
+                      "\n".join(map(lambda m: m.name, sorted(meal for name in names
+                                    if (meal := unit_menu[day][name]).items_status == Meal.ITEMS_AVAILABLE)))
                       for day, names in sorted(unit_menu.items()) if any(meal.items_status == Meal.ITEMS_AVAILABLE
                                                                          for name, meal in unit_menu[day].items())}
-            embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR,
+            if not fields:
+                raise MenuNotFound(unit_slug)
+
+            embed = self.generate_embed(title=unit_name(unit_slug), url=self.MENU_URL, color=DEFAULT_COLOR,
                                         fields=fields, inline=True)
-            embed.set_footer(text=self.menu_footer(unit))
+            embed.set_footer(text=self.menu_footer(unit_slug))
         else:
             # The day's listing
             fields = {str(meal): ", ".join(item for item in meal.items.keys())
-                      for name, meal in self._menu[unit][day].items() if meal.items_status == Meal.ITEMS_AVAILABLE}
-            embed = self.generate_embed(title=unit, url=self.MENU_URL, color=DEFAULT_COLOR, fields=fields)
-            embed.set_footer(text=self.menu_footer(unit))
+                      for meal in sorted(self._menu[unit_slug][day].values())
+                      if meal.items_status == Meal.ITEMS_AVAILABLE}
+            if not fields:
+                raise MenuNotFound(unit_slug)
+
+            embed = self.generate_embed(title=unit_name(unit_slug), url=self.MENU_URL, color=DEFAULT_COLOR,
+                                        fields=fields)
+            embed.set_footer(text=self.menu_footer(unit_slug))
 
         return embed
 
     def menu_parse(self, args):
         # Dicts to remove duplicates
-        units, days, names, listing = {}, {}, {}, False
+        unit_slugs, days, meal_slugs, listing = {}, {}, {}, False
 
         # Args can be in any order
         for arg in args:
-            arg = arg.lower().replace("'", "").translate(SEPS)
+            arg = self.reduce(arg)
             try:
                 # Is a unit?
-                units.update({self._units[arg]: 0})
+                unit_slugs.update({self._unit_slugs[arg]: 0})
                 continue
             except KeyError:
                 pass
 
             try:
                 # Is a food truck?
-                units.update({self._food_trucks[arg]: 0})
+                unit_slugs.update({self._food_trucks[arg]: 0})
                 continue
             except KeyError:
                 pass
@@ -519,11 +494,11 @@ class Dining(commands.Cog):
             try:
                 # Is a meal or a listing request?
                 if arg == "next":
-                    names = {arg: 0}
+                    meal_slugs = {arg: 0}
                 elif arg == "list":
                     listing = True
                 else:
-                    names.update({self._meals[arg]: 0})
+                    meal_slugs.update({self._meal_slugs[arg]: 0})
                 continue
             except KeyError:
                 pass
@@ -540,24 +515,29 @@ class Dining(commands.Cog):
                     raise commands.BadArgument(f"Invalid argument provided: {arg}") from None
 
         if not listing:
-            if not units:
+            if not unit_slugs:
                 raise commands.BadArgument("No dining facility was provided.") from None
             if not days:
                 days = [today()]
-            if not names:
+            if not meal_slugs:
                 if days == [today()]:
-                    names = ["next"]
+                    meal_slugs = ["next"]
                 else:
-                    names = ["list"]
+                    meal_slugs = ["list"]
         else:
-            if not units:
-                units = ["list"]
+            if not unit_slugs:
+                unit_slugs = ["list"]
             elif not days:
                 days = ["list"]
-            elif not names:
-                names = ["list"]
+            elif not meal_slugs:
+                meal_slugs = ["list"]
 
-        if len(units) * min(len(days), 1) * min(len(names), 1) > MAX_RETURNS:
+        if len(unit_slugs) * min(len(days), 1) * min(len(meal_slugs), 1) > MAX_RETURNS:
             raise TooManySelections from None
 
-        return units, days, names
+        return unit_slugs, days, meal_slugs
+
+    @staticmethod
+    def reduce(arg):
+        return arg.lower().replace("'", "").translate(SEPS). \
+            replace("-hall", "").replace("-center", "").replace("-dining", "")
