@@ -3,4 +3,4 @@ Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kiss
 Retail Dining: `holy-smokes`\n`grins`\n`local-java`\n`kissam`
 Suzie's Cafe: `suzies-blair`\n`suzies-central`\n`suzies-featheringill`\n`suzies-mrb`
 Libraries: `biomedical`\n`central`\n`divinity`\n`fine-arts`\n`law`\n`management`\n`music`\n`peabody`\n`science-and-engineering`\n`university-archives`
-Post Offices: `station-b`
+Other Services: `bookstore`\n`post-office`
