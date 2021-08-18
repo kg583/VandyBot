@@ -2,7 +2,6 @@
 alumni-hall: Alumni Cafe
 commons-dining: The Commons Dining Center
 e-bronson-ingram-dining-hall: E. Bronson Ingram Dining Center
-hendrix-room: Hendrix Room
 kissam-dining: The Kitchen at Kissam
 mctyeire: McTyeire
 rand: Rand Dining Center

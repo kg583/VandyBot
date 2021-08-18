@@ -1,6 +1,7 @@
 from discord import Embed
 from discord.ext import commands
 
+import vandybot.hours
 from ..helper import *
 
 _dir = "vandybot/dining"
@@ -246,9 +247,13 @@ class Dining(commands.Cog):
                     print(f"Missing unit option: {unit_slug}")
                     continue
 
-                # Find available meals
                 unit_menu = menu[unit_slug]
-                unit_hours = await self._bot.get_cog("Hours").get_dining_hours_dispatch(unit_slug)
+                try:
+                    unit_hours = await self._bot.get_cog("Hours").get_dining_hours_dispatch(unit_slug)
+                except vandybot.hours.UnitNotFound:
+                    unit_hours = {}
+
+                # Find available meals
                 for meal in unit["active_menu_types"]:
                     meal_slug = meal["slug"]
                     if meal_slug not in self._meal_set:
@@ -286,35 +291,36 @@ class Dining(commands.Cog):
                                 current.items_status = Meal.ITEMS_NOT_FOUND
 
                 # Match the times from NetNutrition
-                for day in week:
-                    need_hours = sorted([meal for meal in unit_menu[day].values() if
-                                         meal.items_status != Meal.ITEMS_NOT_FOUND and
-                                         meal.slug != Meal.DEFAULT])
-                    need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
+                if unit_hours:
+                    for day in week:
+                        need_hours = sorted([meal for meal in unit_menu[day].values() if
+                                             meal.items_status != Meal.ITEMS_NOT_FOUND and
+                                             meal.slug != Meal.DEFAULT])
+                        need_hours = need_hours if need_hours else [unit_menu[day][Meal.DEFAULT]]
 
-                    hour_index = 0
-                    hour_max = len(unit_hours[day])
-                    for current in need_hours:
-                        if len(need_hours) <= hour_max or \
-                                len(need_hours) > hour_max and current.items_status == Meal.ITEMS_AVAILABLE:
-                            # There are enough hours to go around
-                            try:
-                                current.opens, current.closes = unit_hours[day][hour_index]
-                                current.hours_status = Meal.HOURS_AVAILABLE
-                                hour_index += 1
-                            except ValueError:
-                                # Is a closed
-                                current.hours_status = Meal.CLOSED
+                        hour_index = 0
+                        hour_max = len(unit_hours[day])
+                        for current in need_hours:
+                            if len(need_hours) <= hour_max or \
+                                    len(need_hours) > hour_max and current.items_status == Meal.ITEMS_AVAILABLE:
+                                # There are enough hours to go around
+                                try:
+                                    current.opens, current.closes = unit_hours[day][hour_index]
+                                    current.hours_status = Meal.HOURS_AVAILABLE
+                                    hour_index += 1
+                                except ValueError:
+                                    # Is a closed
+                                    current.hours_status = Meal.CLOSED
 
-                        if hour_index >= hour_max:
-                            break
+                            if hour_index >= hour_max:
+                                break
 
-                    # Set Daily Offerings hours
-                    if need_hours:
-                        default = unit_menu[day][Meal.DEFAULT]
-                        default.opens = min(meal.opens for meal in need_hours)
-                        default.closes = max(meal.closes for meal in need_hours)
-                        default.hours_status = Meal.HOURS_AVAILABLE
+                        # Set Daily Offerings hours
+                        if need_hours:
+                            default = unit_menu[day][Meal.DEFAULT]
+                            default.opens = min(meal.opens for meal in need_hours)
+                            default.closes = max(meal.closes for meal in need_hours)
+                            default.hours_status = Meal.HOURS_AVAILABLE
 
         except aiohttp.ClientConnectionError:
             # Need to restart the fetch
@@ -443,21 +449,27 @@ class Dining(commands.Cog):
                     continue
 
                 for meal_slug in meal_slugs:
+                    if meal_slug == "next":
+                        if all(meal.hours_status == Meal.HOURS_NOT_FOUND
+                               for meal in self._menu[unit_slug][day].values()):
+                            meal_slug = "list"
+                        else:
+                            meal = self.find_next_meal(unit_slug, day)
+                    else:
+                        meal = self._menu[unit_slug][day][meal_slug]
+
                     if meal_slug == "list":
                         embed = self.menu_list(unit_slug, day)
-                    else:
-                        if meal_slug == "next":
-                            meal = self.find_next_meal(unit_slug, day)
-                        else:
-                            meal = self._menu[unit_slug][day][meal_slug]
+                        await ctx.send(embed=embed)
+                        continue
 
-                        closing = time_on(datetime.date.today(), meal.closes)
-                        if meal.items_status == Meal.ITEMS_NOT_FOUND or \
-                                (now() - closing).seconds > self.MIN_SINCE:
-                            # Find next instance of that meal if possible
-                            meal = self.find_next_meal(unit_slug, day, meal.slug)
+                    closing = time_on(datetime.date.today(), meal.closes)
+                    if meal.items_status == Meal.ITEMS_NOT_FOUND or \
+                            (now() - closing).seconds > self.MIN_SINCE:
+                        # Find next instance of that meal if possible
+                        meal = self.find_next_meal(unit_slug, day, meal.slug)
 
-                        embed = self.menu_dispatch(unit_slug, meal)
+                    embed = self.menu_dispatch(unit_slug, meal)
 
                     await ctx.send(embed=embed)
 

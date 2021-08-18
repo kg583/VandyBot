@@ -16,3 +16,4 @@ the-kitchen-at-kissam: kissam-dining
 zeppos: zeppos
 alumni: alumni-hall
 alumni-cafe: alumni-hall
+mctyeire: mctyeire
