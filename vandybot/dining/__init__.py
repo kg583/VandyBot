@@ -114,6 +114,7 @@ class Meal:
 
 
 class Stations:
+    # This entire class is awful
     DEFAULT = "General Items"
 
     def __init__(self):
@@ -245,6 +246,7 @@ class Dining(commands.Cog):
                     print(f"Missing unit option: {unit_slug}")
                     continue
 
+                # Find available meals
                 unit_menu = menu[unit_slug]
                 unit_hours = await self._bot.get_cog("Hours").get_dining_hours_dispatch(unit_slug)
                 for meal in unit["active_menu_types"]:
@@ -257,6 +259,7 @@ class Dining(commands.Cog):
                     next_url = f"/menu/api/weeks/school/{unit_slug}/menu-type/{meal_slug}/{year}/{month}/{day + 7}/"
                     in_week = False
 
+                    # Find available dates
                     for listing in (await jfetch(self._session, f"{self.MENU_URL}{url}"))["days"] + \
                                    (await jfetch(self._session, f"{self.MENU_URL}{next_url}"))["days"]:
                         day = Day(datetime.date.fromisoformat(listing["date"]).strftime("%A"))
@@ -282,6 +285,7 @@ class Dining(commands.Cog):
                             else:
                                 current.items_status = Meal.ITEMS_NOT_FOUND
 
+                # Match the times from NetNutrition
                 for day in week:
                     need_hours = sorted([meal for meal in unit_menu[day].values() if
                                          meal.items_status != Meal.ITEMS_NOT_FOUND and
@@ -337,6 +341,7 @@ class Dining(commands.Cog):
             await self.retry()
 
     def move_in(self, day: Day):
+        # I'm probably gonna keep this here and so that next year's move-in can be setup the same way
         color = 0x866343
         currently = now().time()
         url = "https://campusdining.vanderbilt.edu/where-to-dine/"
