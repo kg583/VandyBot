@@ -78,6 +78,17 @@ async def jfetch(session, url, params=None):
         return await response.json()
 
 
+def joiner(words):
+    if len(words) > 2:
+        return ", ".join(words[:-1]) + ", and " + str(words[-1])
+    elif len(words) == 2:
+        return " and ".join(words)
+    elif len(words) == 1:
+        return words[0]
+    else:
+        return ""
+
+
 def parameterize(name, iterable):
     params = {}
     for index, item in enumerate(iterable):
