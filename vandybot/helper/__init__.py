@@ -7,7 +7,6 @@ import pickle
 from bs4 import BeautifulSoup
 from discord import Activity, ActivityType
 
-
 # A nice grey
 DEFAULT_COLOR = 0x9B9B9B
 DEFAULT_TEXT = "Type ~help for usage!"
@@ -20,8 +19,10 @@ GITHUB_URL = "https://github.com/kg583/VandyBot"
 MAX_RETURNS = 5
 
 # Replace common separators with '-'
-SEPS = str.maketrans({" ": "-",
-                      "_": "-"})
+SEPS = str.maketrans({
+                         " ": "-",
+                         "_": "-"
+                     })
 
 
 # Markdown functions
@@ -62,6 +63,12 @@ def first(iterable):
         return next(iter(iterable))
     except StopIteration:
         return None
+
+
+def hours_reader(filename):
+    return {Day(day): [tuple(map(Time, time.split(" - ")))]
+            if " - " in time else ["Closed"]
+            for day, time in reader(filename).items()}
 
 
 async def jfetch(session, url, params=None):

@@ -1,0 +1,2 @@
+bookstore: The Vanderbilt Bookstore
+book-store: The Vanderbilt Bookstore

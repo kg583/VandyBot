@@ -1,7 +1,7 @@
-Monday: 08:00 AM - 04:00 PM
-Tuesday: 08:00 AM - 04:00 PM
-Wednesday: 08:00 AM - 04:00 PM
-Thursday: 08:00 AM - 04:00 PM
-Friday: 08:00 AM - 04:00 PM
-Saturday: Closed
+Monday: 8:00 AM - 4:00 PM
+Tuesday: 8:00 AM - 4:00 PM
+Wednesday: 8:00 AM - 4:00 PM
+Thursday: 8:00 AM - 4:00 PM
+Friday: 8:00 AM - 4:00 PM
+Saturday: 8:00 AM - 12:00 PM
 Sunday: Closed

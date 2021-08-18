@@ -34,6 +34,7 @@ class UnitClosed(UnitNotFound):
 # Main Cog
 class Hours(commands.Cog):
     # URL stuff
+    BOOKSTORE_URL = "https://www.bkstr.com/vanderbiltstore/home"
     DINING_URL = "https://netnutrition.cbord.com/nn-prod/vucampusdining"
     DINING_HEADER = {"Referer": DINING_URL}
     LIBRARY_URL = "https://www.library.vanderbilt.edu/hours.php"
@@ -44,12 +45,18 @@ class Hours(commands.Cog):
         self._session = aiohttp.ClientSession()
         self._list = reader(f"{_dir}/list")
 
+        self._bookstores = reader(f"{_dir}/bookstores")
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
         self._post_offices = reader(f"{_dir}/post_offices")
+
         self._loc_conditions = reader(f"{_dir}/loc_conditions")
 
-        self._post_office_hours = reader(f"{_dir}/post_office_hours")
+        # I'd like to use this but POST requests make it dumb
+        self._dining_oids = reader(f"{_dir}/dining_oids")
+
+        self._bookstore_hours = hours_reader(f"{_dir}/bookstore_hours")
+        self._post_office_hours = hours_reader(f"{_dir}/post_office_hours")
 
         # Swapped unit commands
         for loc in self._dining:
@@ -159,11 +166,13 @@ class Hours(commands.Cog):
                     all_hours, footer = await self.get_dining_hours(loc)
                     url = self.LIBRARY_URL
                 elif loc in self._post_offices.values():
-                    all_hours = {Day(day): [tuple(map(Time, time.split(" - ")))]
-                                 if " - " in time else ["Closed"]
-                                 for day, time in self._post_office_hours.items()}
-                    footer = "Package Pick-up Window is additionally open from 8:00 AM to 12:00 PM on Saturdays"
+                    all_hours = self._post_office_hours
+                    footer = "Weekday hours extended to 5 PM for the first two weeks of the semester"
                     url = self.POST_OFFICE_URL
+                elif loc in self._bookstores.values():
+                    all_hours = self._bookstore_hours
+                    footer = ""
+                    url = self.BOOKSTORE_URL
                 else:
                     raise UnitNotFound(loc)
 
@@ -244,9 +253,16 @@ class Hours(commands.Cog):
             except KeyError:
                 pass
 
-            # Is the post office?
             try:
+                # Is the post office?
                 locs.append(self._post_offices[arg])
+                continue
+            except KeyError:
+                pass
+
+            try:
+                # Is the bookstore?
+                locs.append(self._bookstores[arg])
                 continue
             except KeyError:
                 pass

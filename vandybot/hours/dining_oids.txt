@@ -1,0 +1,18 @@
+2301: 11
+Rand Dining Center: 1
+The Commons Dining Center: 2
+E. Bronson Ingram Dining Center: 8
+The Kitchen at Kissam: 3
+Zeppos Dining: 18
+Local Java Cafe: 12
+Branscomb Munchie: 14
+Common Grounds Munchie: 13
+Highland Munchie: 16
+Kissam Munchie: 15
+Suzie's Food for Thought Cafe: 4
+Suzie's Blair School of Music: 5
+Holy Smokes Kosher Food Truck: 6
+Suzie's MRB III: 7
+Grins Vegetarian Cafe: 8
+Alumni Cafe: 17
+Suzieâs Featheringill: 9
