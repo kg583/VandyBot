@@ -187,7 +187,7 @@ class Dining(commands.Cog):
         # Fake shallow copy
         day = copy.copy(start)
         if day.is_today:
-            options = list(self._menu[unit_slug][day].values())\
+            options = list(self._menu[unit_slug][day].values()) \
                 if meal_slug is None else [self._menu[unit_slug][day][meal_slug]]
             next_meal = first(meal for meal in sorted(options, key=lambda meal: (meal.closes, meal))
                               if meal.items_status in permitted and meal.closes > now().time())
@@ -196,7 +196,7 @@ class Dining(commands.Cog):
             day += 1
 
         while not day.is_today:
-            options = list(self._menu[unit_slug][day].values())\
+            options = list(self._menu[unit_slug][day].values()) \
                 if meal_slug is None else [self._menu[unit_slug][day][meal_slug]]
             next_meal = first(meal for meal in sorted(options, key=lambda meal: (meal.opens, meal))
                               if meal.items_status in permitted)
@@ -232,7 +232,8 @@ class Dining(commands.Cog):
         # Create blank menu
         menu = {unit_slug:
                 {day:
-                 {meal_slug: Meal(meal_slug, day) for meal_slug in self._meal_set}
+                 {meal_slug: Meal(meal_slug, day)
+                  for meal_slug in self._meal_set}
                  for day in week}
                 for unit_slug in self._unit_set}
 
@@ -256,7 +257,7 @@ class Dining(commands.Cog):
                     next_url = f"/menu/api/weeks/school/{unit_slug}/menu-type/{meal_slug}/{year}/{month}/{day + 7}/"
                     in_week = False
 
-                    for listing in (await jfetch(self._session, f"{self.MENU_URL}{url}"))["days"] +\
+                    for listing in (await jfetch(self._session, f"{self.MENU_URL}{url}"))["days"] + \
                                    (await jfetch(self._session, f"{self.MENU_URL}{next_url}"))["days"]:
                         day = Day(datetime.date.fromisoformat(listing["date"]).strftime("%A"))
                         if day.is_today:
@@ -335,6 +336,47 @@ class Dining(commands.Cog):
         else:
             await self.retry()
 
+    def move_in(self, day: Day):
+        color = 0x866343
+        currently = now().time()
+        url = "https://campusdining.vanderbilt.edu/where-to-dine/"
+
+        # Ticking time bomb
+        if now().date() >= datetime.date(2021, 8, 23):
+            raise commands.BadArgument("Invalid argument provided: move-in") from None
+
+        if day == Day("Saturday"):
+            if currently <= Time("7:30 PM"):
+                return self.generate_embed(title="Move-In Dinner @ East Lawn", url=url, color=color,
+                                           fields={
+                                               "Crawford, East, Hank, North, and Sutherland": "5:30 PM - 6:30 PM",
+                                               "Gillette, Memorial, Murray, Stambaugh, and West": "6:30 PM - 7:30 PM"
+                                           })
+            elif currently <= Time("10:30 PM"):
+                return self.generate_embed(title="Movie on the Peabody Lawn", url=url, color=color,
+                                           fields={"Snacks": "8:30 PM - 10:30 PM"})
+            else:
+                return self.generate_embed(title="Commons Munchie", url=url, color=color,
+                                           fields={"Snacks": "8:00 PM - 12:00 AM"})
+        elif day == Day("Sunday"):
+            if currently <= Time("9:30 AM") or not day.is_today:
+                return self.menu_dispatch("commons-dining", self._menu["commons-dining"][day]["breakfast"])
+            elif currently <= Time("2:45 PM"):
+                return self.generate_embed(title="Boxed Lunch @ Commons Lawn", url=url, color=color,
+                                           fields={
+                                               "Visions Groups 1-46": "10:45 AM - 12:45 PM",
+                                               "Visions Groups 47-92": "12:45 PM - 2:45 PM"
+                                           })
+            elif currently <= Time("8:30 PM"):
+                return self.generate_embed(title="Dinner & Founders Walk", url=url, color=color,
+                                           fields={
+                                               "Sautees @ 2301 via the GET app": "4:00 PM - 8:00 PM",
+                                               "Founders Walk Picnic @ Commons Lawn": "7:30 PM - 8:30 PM"
+                                           })
+            else:
+                return self.generate_embed(title="Commons Munchie", url=url, color=color,
+                                           fields={"Snacks": "7:00 PM - 11:00 PM"})
+
     async def retry(self):
         # Fetch failed for some reason
         if self._retries < self.MAX_RETRIES or not self._menu:
@@ -374,6 +416,7 @@ class Dining(commands.Cog):
                 # Largest listing
                 embed = self.menu_list()
                 await ctx.send(embed=embed)
+                continue
             elif unit_slug in self._food_trucks.values():
                 # Food trucks are special
                 menu_img = await self.get_food_truck_menu(unit_slug)
@@ -381,32 +424,39 @@ class Dining(commands.Cog):
                 embed.set_image(url=menu_img)
                 embed.set_footer(text="Food trucks are available on campus on a rotating schedule")
                 await ctx.send(embed=embed)
-            else:
-                for day in days:
-                    if day == "list":
-                        embed = self.menu_list(unit_slug)
-                        await ctx.send(embed=embed)
+                continue
+
+            for day in days:
+                if unit_slug == "move-in":
+                    embed = self.move_in(day if day != "list" else today())
+                    await ctx.send(embed=embed)
+                    continue
+
+                if day == "list":
+                    embed = self.menu_list(unit_slug)
+                    await ctx.send(embed=embed)
+                    continue
+
+                for meal_slug in meal_slugs:
+                    if meal_slug == "list":
+                        embed = self.menu_list(unit_slug, day)
                     else:
-                        for meal_slug in meal_slugs:
-                            if meal_slug == "list":
-                                embed = self.menu_list(unit_slug, day)
-                            else:
-                                if meal_slug == "next":
-                                    meal = self.find_next_meal(unit_slug, day)
-                                else:
-                                    meal = self._menu[unit_slug][day][meal_slug]
+                        if meal_slug == "next":
+                            meal = self.find_next_meal(unit_slug, day)
+                        else:
+                            meal = self._menu[unit_slug][day][meal_slug]
 
-                                closing = time_on(datetime.date.today(), meal.closes)
-                                if meal.items_status == Meal.ITEMS_NOT_FOUND or \
-                                        (now() - closing).seconds > self.MIN_SINCE:
-                                    # Find next instance of that meal if possible
-                                    meal = self.find_next_meal(unit_slug, day, meal.slug)
+                        closing = time_on(datetime.date.today(), meal.closes)
+                        if meal.items_status == Meal.ITEMS_NOT_FOUND or \
+                                (now() - closing).seconds > self.MIN_SINCE:
+                            # Find next instance of that meal if possible
+                            meal = self.find_next_meal(unit_slug, day, meal.slug)
 
-                                embed = self.menu_dispatch(unit_slug, meal)
+                        embed = self.menu_dispatch(unit_slug, meal)
 
-                            await ctx.send(embed=embed)
+                    await ctx.send(embed=embed)
 
-                    await asyncio.sleep(1)
+            await asyncio.sleep(1)
 
     def menu_dispatch(self, unit_slug: str, meal: Meal):
         if meal.items_status == Meal.ITEMS_NOT_LISTED:
@@ -446,8 +496,9 @@ class Dining(commands.Cog):
             # The week's listing
             unit_menu = self._menu[unit_slug]
             fields = {underline(day):
-                      "\n".join(map(lambda m: m.name, sorted(meal for name in names
-                                    if (meal := unit_menu[day][name]).items_status == Meal.ITEMS_AVAILABLE)))
+                      "\n".join(map(lambda m: m.name,
+                                    sorted(meal for name in names
+                                           if (meal := unit_menu[day][name]).items_status == Meal.ITEMS_AVAILABLE)))
                       for day, names in sorted(unit_menu.items()) if any(meal.items_status == Meal.ITEMS_AVAILABLE
                                                                          for name, meal in unit_menu[day].items())}
             if not fields:
@@ -497,6 +548,9 @@ class Dining(commands.Cog):
                     meal_slugs = {arg: 0}
                 elif arg == "list":
                     listing = True
+                elif arg == "move-in":
+                    listing = True
+                    unit_slugs = {arg: 0}
                 else:
                     meal_slugs.update({self._meal_slugs[arg]: 0})
                 continue
