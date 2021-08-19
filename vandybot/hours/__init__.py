@@ -88,6 +88,9 @@ class Hours(commands.Cog):
 
         return embed
 
+    def cached(self, message):
+        return False
+
     async def get_dining_hours(self, unit: str):
         unit_oid = await self.get_dining_unit_oid(unit)
         response = await post(self._session, f"{self.DINING_URL}/Unit/GetHoursOfOperationMarkup",
@@ -295,3 +298,9 @@ class Hours(commands.Cog):
     @hours.after_invoke
     async def hours_reset(self, *_):
         await self.reset()
+
+    async def on_raw_reaction_add(self, payload):
+        pass
+
+    async def on_raw_reaction_remove(self, payload):
+        pass

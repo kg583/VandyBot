@@ -127,6 +127,7 @@ class Stations:
 
     def __iter__(self):
         for key in self.names:
+            # This is kinda messy but its necessary for the first pass
             if key is not None or self.items[key]:
                 yield self.names[key], self.items[key]
 
@@ -164,9 +165,26 @@ class Dining(commands.Cog):
 
         self._list = reader(f"{_dir}/list")
 
+        self._cache = {}
+        self._cache_size = 8
+        self._reactions = reader(f"{_dir}/reactions/list")
+
         self._menu = {}
         self._retries = 0
         self._timestamp = now()
+
+    @staticmethod
+    def filter_items(items: dict, restrictions: set):
+        if not restrictions:
+            return items
+
+        # Evil sinking point bit level hacking
+        return {station: [item for item in item_list
+                          if all((restriction.split("_")[0].capitalize() in map(lambda i: i["synced_name"],
+                                                                                item["icons"]["food_icons"]))
+                                 ^ (restriction[-5:] == "_free")
+                                 for restriction in restrictions)]
+                for station, item_list in items.items()}
 
     @staticmethod
     def generate_embed(title, url, color, fields, inline=False, max_len=240):
@@ -179,6 +197,9 @@ class Dining(commands.Cog):
             embed.add_field(name=header, value=text, inline=inline)
 
         return embed
+
+    def cached(self, message_id: int):
+        return message_id in self._cache
 
     def find_next_meal(self, unit_slug: str, start: Day, meal_slug: str = None, relaxed=False):
         permitted = [Meal.ITEMS_AVAILABLE]
@@ -342,6 +363,7 @@ class Dining(commands.Cog):
                 pickle.dump(self._menu, menu_pickle)
 
             # Schedule the next fetch
+            self._cache = {}
             self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
         else:
             await self.retry()
@@ -371,7 +393,7 @@ class Dining(commands.Cog):
                                            fields={"Snacks": "8:00 PM - 12:00 AM"})
         elif day == Day("Sunday"):
             if currently <= Time("9:30 AM") or not day.is_today:
-                return self.menu_dispatch("commons-dining", self._menu["commons-dining"][day]["breakfast"])
+                return self.menu_dispatch("commons-dining", self._menu["commons-dining"][day]["breakfast"], set())
             elif currently <= Time("2:45 PM"):
                 return self.generate_embed(title="Boxed Lunch @ Commons Lawn", url=url, color=color,
                                            fields={
@@ -469,20 +491,35 @@ class Dining(commands.Cog):
                         # Find next instance of that meal if possible
                         meal = self.find_next_meal(unit_slug, day, meal.slug)
 
-                    embed = self.menu_dispatch(unit_slug, meal)
+                    restrictions = set()
+                    embed = self.menu_dispatch(unit_slug, meal, restrictions)
+                    message = await ctx.send(embed=embed)
 
-                    await ctx.send(embed=embed)
+                    cache = list(self._cache.items())
+                    cache.insert(0, (message.id, [message, unit_slug, meal, restrictions]))
+                    self._cache = dict(cache[:self._cache_size])
+
+                    for reaction in self._reactions.values():
+                        await message.add_reaction(reaction)
 
             await asyncio.sleep(1)
 
-    def menu_dispatch(self, unit_slug: str, meal: Meal):
+    def menu_dispatch(self, unit_slug: str, meal: Meal, restrictions: set):
         if meal.items_status == Meal.ITEMS_NOT_LISTED:
             items = {"No Items Listed": "Please try again later."}
         else:
-            items = meal.items
+            items = self.filter_items(meal.items, restrictions)
 
-        fields = {underline(str(meal)): meal.status}
-        fields.update({header: ", ".join(map(self.get_item_name, text)) for header, text in items.items()})
+        if restrictions:
+            subtitle = joiner(list(map(lambda r: "-".join(map(str.capitalize,
+                                                              r.split("_"))),
+                                       restrictions))) + " Options for "
+        else:
+            subtitle = ""
+
+        fields = {underline(subtitle + str(meal)): meal.status}
+        fields.update({station: options for station, item_list in items.items()
+                       if (options := joiner(list(map(self.get_item_name, item_list))))})
         embed = self.generate_embed(title=unit_name(unit_slug), url=self.MENU_URL, color=meal.color,
                                     fields=fields)
         embed.set_footer(text=self.menu_footer(unit_slug))
@@ -544,7 +581,7 @@ class Dining(commands.Cog):
 
         # Args can be in any order
         for arg in args:
-            arg = self.reduce(arg)
+            arg = reduce(arg, "dining")
             try:
                 # Is a unit?
                 unit_slugs.update({self._unit_slugs[arg]: 0})
@@ -608,7 +645,16 @@ class Dining(commands.Cog):
 
         return unit_slugs, days, meal_slugs
 
-    @staticmethod
-    def reduce(arg):
-        return arg.lower().replace("'", "").translate(SEPS). \
-            replace("-hall", "").replace("-center", "").replace("-dining", "")
+    async def on_raw_reaction_add(self, payload):
+        message, unit_slug, meal, restrictions = self._cache[payload.message_id]
+        restrictions.add(payload.emoji.name)
+
+        embed = self.menu_dispatch(unit_slug, meal, restrictions)
+        await message.edit(embed=embed)
+
+    async def on_raw_reaction_remove(self, payload):
+        message, unit_slug, meal, restrictions = self._cache[payload.message_id]
+        restrictions.remove(payload.emoji.name)
+
+        embed = self.menu_dispatch(unit_slug, meal, restrictions)
+        await message.edit(embed=embed)

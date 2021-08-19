@@ -35,6 +35,9 @@ class AnchorLink(commands.Cog):
 
         return embed
 
+    def cached(self, message):
+        return False
+
     async def get_events(self, take=10, query="", ends_after=datetime.datetime.now(), starts_before=None,
                          is_online="", themes=None, category_ids=None, perks=None):
         # Set GET params
@@ -63,4 +66,10 @@ class AnchorLink(commands.Cog):
 
     @commands.command(name="events")
     async def events(self, ctx, *args):
+        pass
+
+    async def on_raw_reaction_add(self, payload):
+        pass
+
+    async def on_raw_reaction_remove(self, payload):
         pass

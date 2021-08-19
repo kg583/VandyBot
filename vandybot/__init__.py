@@ -1,6 +1,7 @@
 import env_file
 from discord import Embed
 from discord.ext import commands
+from discord.utils import get
 
 from .helper import *
 
@@ -31,7 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if message.author != bot.user:
+    if not message.author.bot:
         if not DEBUGGING or message.guild.id == DEBUG_GUILD_ID:
             await bot.process_commands(message)
 
@@ -47,6 +48,21 @@ async def on_command_error(ctx, error):
 
         embed.add_field(name=name, value=value)
         await ctx.send(embed=embed)
+
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    if not payload.member.bot:
+        for cog in map(bot.get_cog, bot.cogs):
+            if cog.cached(payload.message_id):
+                await cog.on_raw_reaction_add(payload)
+
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    for cog in map(bot.get_cog, bot.cogs):
+        if cog.cached(payload.message_id):
+            await cog.on_raw_reaction_remove(payload)
 
 
 @bot.command(name="github",
@@ -79,8 +95,8 @@ def startup():
 
 async def main():
     # Start cogs
-    for cog in bot.cogs:
-        await bot.get_cog(cog).startup()
+    for cog in map(bot.get_cog, bot.cogs):
+        await cog.startup()
 
     # Connect
     print("VandyBot is connecting...")
