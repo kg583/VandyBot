@@ -373,6 +373,7 @@ class Dining(commands.Cog):
                 for reaction in self._reactions.values():
                     await oldest_message.remove_reaction(reaction, self._bot.user)
                 cache.pop(0)
+            self._cache = dict(cache)
 
             # Schedule the next fetch
             self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
