@@ -1,7 +1,6 @@
 import env_file
 from discord import Embed
 from discord.ext import commands
-from discord.utils import get
 
 from .helper import *
 
@@ -86,7 +85,7 @@ async def ping(ctx):
 
 def startup():
     print("VandyBot is starting up...")
-    print(f"DEBUG MODE == {DEBUGGING}")
+    print(f"DEBUG MODE == {DEBUGGING}\n")
 
     # Establish cogs
     bot.add_cog(Dining(bot))
@@ -97,6 +96,7 @@ async def main():
     # Start cogs
     for cog in map(bot.get_cog, bot.cogs):
         await cog.startup()
+        print()
 
     # Connect
     print("VandyBot is connecting...")
