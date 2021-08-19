@@ -178,11 +178,15 @@ class Dining(commands.Cog):
         if not restrictions:
             return items
 
-        # Evil sinking point bit level hacking
+        # This is gross but Vegan ⊂ Vegetarian
+        subsets = {"vegetarian": ("vegetarian", "vegan")}
+        restrictions = [subsets.get(restriction, (restriction,)) for restriction in restrictions]
+
+        # Evil fixed point bit level hacking
         return {station: [item for item in item_list
-                          if all((restriction.split("_")[0].capitalize() in map(lambda i: i["synced_name"],
-                                                                                item["icons"]["food_icons"]))
-                                 ^ (restriction[-5:] == "_free")
+                          if all(any((alternative.split("_")[0].capitalize() in map(lambda i: i["synced_name"],
+                                                                                    item["icons"]["food_icons"]))
+                                 ^ (alternative[-5:] == "_free") for alternative in restriction)
                                  for restriction in restrictions)]
                 for station, item_list in items.items()}
 
