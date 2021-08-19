@@ -166,7 +166,7 @@ class Dining(commands.Cog):
         self._list = reader(f"{_dir}/list")
 
         self._cache = {}
-        self._cache_size = 8
+        self._cache_size = 16
         self._reactions = reader(f"{_dir}/reactions/list")
 
         self._menu = {}
@@ -362,8 +362,15 @@ class Dining(commands.Cog):
             with open(f"{_dir}/menu.pickle", "wb") as menu_pickle:
                 pickle.dump(self._menu, menu_pickle)
 
+            # Cache pruning
+            cache = list(self._cache.items())
+            while len(cache) > self._cache_size:
+                oldest_message = cache[0][1][0]
+                for reaction in self._reactions.values():
+                    await oldest_message.remove_reaction(reaction, self._bot.user)
+                cache.pop(0)
+
             # Schedule the next fetch
-            self._cache = {}
             self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
         else:
             await self.retry()
@@ -495,12 +502,10 @@ class Dining(commands.Cog):
                     embed = self.menu_dispatch(unit_slug, meal, restrictions)
                     message = await ctx.send(embed=embed)
 
-                    cache = list(self._cache.items())
-                    cache.insert(0, (message.id, [message, unit_slug, meal, restrictions]))
-                    self._cache = dict(cache[:self._cache_size])
-
                     for reaction in self._reactions.values():
                         await message.add_reaction(reaction)
+
+                    self._cache.update({message.id: (message, unit_slug, meal, restrictions)})
 
             await asyncio.sleep(1)
 
@@ -646,15 +651,20 @@ class Dining(commands.Cog):
         return unit_slugs, days, meal_slugs
 
     async def on_raw_reaction_add(self, payload):
-        message, unit_slug, meal, restrictions = self._cache[payload.message_id]
-        restrictions.add(payload.emoji.name)
+        if payload.emoji.name in self._reactions:
+            message, unit_slug, meal, restrictions = self._cache[payload.message_id]
+            restrictions.add(payload.emoji.name)
 
-        embed = self.menu_dispatch(unit_slug, meal, restrictions)
-        await message.edit(embed=embed)
+            embed = self.menu_dispatch(unit_slug, meal, restrictions)
+            await message.edit(embed=embed)
 
     async def on_raw_reaction_remove(self, payload):
-        message, unit_slug, meal, restrictions = self._cache[payload.message_id]
-        restrictions.remove(payload.emoji.name)
+        if payload.emoji.name in self._reactions:
+            message, unit_slug, meal, restrictions = self._cache[payload.message_id]
+            try:
+                restrictions.remove(payload.emoji.name)
+            except KeyError:
+                pass
 
-        embed = self.menu_dispatch(unit_slug, meal, restrictions)
-        await message.edit(embed=embed)
+            embed = self.menu_dispatch(unit_slug, meal, restrictions)
+            await message.edit(embed=embed)

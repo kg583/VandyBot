@@ -51,7 +51,7 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    if not payload.member.bot:
+    if payload.user_id != bot.user.id:
         for cog in map(bot.get_cog, bot.cogs):
             if cog.cached(payload.message_id):
                 await cog.on_raw_reaction_add(payload)
@@ -59,9 +59,10 @@ async def on_raw_reaction_add(payload):
 
 @bot.event
 async def on_raw_reaction_remove(payload):
-    for cog in map(bot.get_cog, bot.cogs):
-        if cog.cached(payload.message_id):
-            await cog.on_raw_reaction_remove(payload)
+    if payload.user_id != bot.user.id:
+        for cog in map(bot.get_cog, bot.cogs):
+            if cog.cached(payload.message_id):
+                await cog.on_raw_reaction_remove(payload)
 
 
 @bot.command(name="github",
