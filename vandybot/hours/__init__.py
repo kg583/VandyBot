@@ -123,7 +123,9 @@ class Hours(commands.Cog):
     async def get_dining_unit_oid(self, loc: str):
         response = await fetch(self._session, self.DINING_URL)
         soup = BeautifulSoup(response, "html.parser")
-        units = {unit.get_text(): find_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
+        # NetNutrition put in ONE fancy quote and fucked everything up
+        units = {" ".join(words[1:] if (words := unit.get_text().split())[0].startswith("Suzie") else words):
+                 find_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
         try:
             return units[loc]
         except KeyError:
@@ -188,7 +190,7 @@ class Hours(commands.Cog):
                     fields = {underline(f"Hours on {day}"): "CLOSED" if "Closed" in loc_hours else "\n".join(
                         "{} to {}".format(*span) for span in loc_hours)}
                     footer = self.hours_footer(loc, footer)
-                    embed = self.generate_embed(title=loc, url=url, fields=fields, footer=footer)
+                    embed = self.generate_embed(title=unit_name(loc), url=url, fields=fields, footer=footer)
                     await ctx.send(embed=embed)
 
     def hours_footer(self, loc: str, default: str):

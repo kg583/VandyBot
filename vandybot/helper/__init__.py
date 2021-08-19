@@ -112,9 +112,10 @@ def reader(filename):
     entries = {}
     with open(f"{filename}.txt") as file:
         for line in file.readlines():
-            # key: value
-            entry = line.rstrip("\n").encode().decode("unicode_escape").split(": ")
-            entries.update({entry[0]: entry[1]})
+            if line:
+                # key: value
+                entry = line.rstrip("\n").encode().decode("unicode_escape").split(": ")
+                entries.update({entry[0]: entry[1]})
     return entries
 
 
@@ -146,7 +147,8 @@ def to_time(time):
 
 
 # Slugs are lame
-UNIT_NAMES = reader(f"vandybot/helper/dining")
+UNIT_NAMES = reader("vandybot/helper/dining")
+UNIT_NAMES.update(reader("vandybot/helper/suzies"))
 
 
 def unit_name(unit):

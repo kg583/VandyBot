@@ -27,20 +27,20 @@ highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie
 alumni: Alumni Cafe
 alumni-cafe: Alumni Cafe
-suzie-food-for-thought: Suzie's Food for Thought Cafe
-suzies-food-for-thought: Suzie's Food for Thought Cafe
-suzie-central: Suzie's Food for Thought Cafe
-suzies-central: Suzie's Food for Thought Cafe
-suzie-central-library: Suzie's Food for Thought Cafe
-suzies-central-library: Suzie's Food for Thought Cafe
-suzie-blair: Suzie's Blair School of Music
-suzies-blair: Suzie's Blair School of Music
-suzie-music: Suzie's Blair School of Music
-suzies-music: Suzie's Blair School of Music
+suzie-food-for-thought: Food for Thought Cafe
+suzies-food-for-thought: Food for Thought Cafe
+suzie-central: Food for Thought Cafe
+suzies-central: Food for Thought Cafe
+suzie-central-library: Food for Thought Cafe
+suzies-central-library: Food for Thought Cafe
+suzie-blair: Blair School of Music
+suzies-blair: Blair School of Music
+suzie-music: Blair School of Music
+suzies-music: Blair School of Music
 holy-smokes: Holy Smokes Kosher Food Truck
-suzie-mrb: Suzie's MRB III
-suzies-mrb: Suzie's MRB III
+suzie-mrb: MRB III
+suzies-mrb: MRB III
 grins: Grins Vegetarian Cafe
 grins-vegetarian: Grins Vegetarian Cafe
-suzie-featheringill: Suzie’s Featheringill
-suzies-featheringill: Suzie’s Featheringill
+suzie-featheringill: Featheringill
+suzies-featheringill: Featheringill
