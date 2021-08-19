@@ -35,7 +35,7 @@ class AnchorLink(commands.Cog):
 
         return embed
 
-    def cached(self, message):
+    def cached(self, message_id):
         return False
 
     async def get_events(self, take=10, query="", ends_after=datetime.datetime.now(), starts_before=None,

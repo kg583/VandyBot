@@ -88,7 +88,7 @@ class Hours(commands.Cog):
 
         return embed
 
-    def cached(self, message):
+    def cached(self, message_id):
         return False
 
     async def get_dining_hours(self, unit: str):
