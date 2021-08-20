@@ -528,8 +528,11 @@ class Dining(commands.Cog):
             subtitle = ""
 
         fields = {underline(subtitle + str(meal)): meal.status}
-        fields.update({station: options for station, item_list in items.items()
-                       if (options := joiner(list(map(self.get_item_name, item_list))))})
+        for station, item_list in items.items():
+            options = joiner(list(map(self.get_item_name, item_list)))
+            if options:
+                fields[station] = options
+
         embed = self.generate_embed(title=unit_name(unit_slug), url=self.MENU_URL, color=meal.color,
                                     fields=fields)
         embed.set_footer(text=self.menu_footer(unit_slug))
@@ -561,8 +564,8 @@ class Dining(commands.Cog):
             unit_menu = self._menu[unit_slug]
             fields = {underline(day):
                       "\n".join(map(lambda m: m.name,
-                                    sorted(meal for name in names
-                                           if (meal := unit_menu[day][name]).items_status == Meal.ITEMS_AVAILABLE)))
+                                    sorted(unit_menu[day][name] for name in names
+                                           if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)))
                       for day, names in sorted(unit_menu.items()) if any(meal.items_status == Meal.ITEMS_AVAILABLE
                                                                          for name, meal in unit_menu[day].items())}
             if not fields:

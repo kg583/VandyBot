@@ -123,9 +123,13 @@ class Hours(commands.Cog):
     async def get_dining_unit_oid(self, loc: str):
         response = await fetch(self._session, self.DINING_URL)
         soup = BeautifulSoup(response, "html.parser")
+
         # NetNutrition put in ONE fancy quote and fucked everything up
-        units = {" ".join(words[1:] if (words := unit.get_text().split())[0].startswith("Suzie") else words):
-                 find_oid(unit) for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0")}
+        units = {}
+        for unit in soup.find_all(class_="d-flex flex-wrap col-9 p-0"):
+            words = unit.get_text().split()
+            units[" ".join(words[1:] if words[0].startswith("Suzie") else words)] = find_oid(unit)
+
         try:
             return units[loc]
         except KeyError:
