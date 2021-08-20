@@ -2,6 +2,7 @@ halal: :halal:877680391769706546
 vegan: :vegan:877680391778099241
 vegetarian: :vegetarian:877680391903903746
 coconut_free: :coconut_free:877681726434983936
+dairy_free: :dairy_free:878104885437014076
 egg_free: :egg_free:877681726414012446
 fish_free: :fish_free:877681726455967795
 gluten_free: :gluten_free:877681726468550656
