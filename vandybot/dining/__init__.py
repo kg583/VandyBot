@@ -483,19 +483,22 @@ class Dining(commands.Cog):
                     continue
 
                 for meal_slug in meal_slugs:
+                    meal = None
+
                     if meal_slug == "next":
                         if all(meal.hours_status == Meal.HOURS_NOT_FOUND
                                for meal in self._menu[unit_slug][day].values()):
                             meal_slug = "list"
                         else:
                             meal = self.find_next_meal(unit_slug, day)
-                    else:
-                        meal = self._menu[unit_slug][day][meal_slug]
 
                     if meal_slug == "list":
                         embed = self.menu_list(unit_slug, day)
                         await ctx.send(embed=embed)
                         continue
+
+                    if meal is None:
+                        meal = self._menu[unit_slug][day][meal_slug]
 
                     closing = time_on(datetime.date.today(), meal.closes)
                     if meal.items_status == Meal.ITEMS_NOT_FOUND or \

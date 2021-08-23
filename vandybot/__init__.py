@@ -36,17 +36,18 @@ async def on_message(message):
             await bot.process_commands(message)
 
 
-@bot.event
-async def on_command_error(ctx, error):
-    embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
-    if not isinstance(error, commands.CommandNotFound):
-        if isinstance(error, commands.CommandInvokeError):
-            name, value = str(error).split(":", maxsplit=2)[1:]
-        else:
-            name, value = type(error).__name__, str(error)
+if not DEBUGGING:
+    @bot.event
+    async def on_command_error(ctx, error):
+        embed = Embed(title="Something went wrong", color=DEFAULT_COLOR)
+        if not isinstance(error, commands.CommandNotFound):
+            if isinstance(error, commands.CommandInvokeError):
+                name, value = str(error).split(":", maxsplit=2)[1:]
+            else:
+                name, value = type(error).__name__, str(error)
 
-        embed.add_field(name=name, value=value)
-        await ctx.send(embed=embed)
+            embed.add_field(name=name, value=value)
+            await ctx.send(embed=embed)
 
 
 @bot.event

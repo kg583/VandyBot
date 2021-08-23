@@ -42,6 +42,7 @@ class Hours(commands.Cog):
 
     def __init__(self, bot):
         self._bot = bot
+        self._conn = aiohttp.TCPConnector(limit=1)
         self._session = aiohttp.ClientSession()
         self._list = reader(f"{_dir}/list")
 
@@ -115,7 +116,7 @@ class Hours(commands.Cog):
 
             index += 1
 
-        return hours, "Dining areas may be open to students between listed meal times"
+        return hours, "Dining areas may be open to students between listed meal periods"
 
     async def get_dining_hours_dispatch(self, slug: str):
         return (await self.get_dining_hours(unit_name(slug)))[0]
