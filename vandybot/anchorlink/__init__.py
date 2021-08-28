@@ -38,7 +38,7 @@ class AnchorLink(commands.Cog):
     def cached(self, message_id):
         return False
 
-    async def get_events(self, take=10, query="", ends_after=datetime.datetime.now(), starts_before=None,
+    async def get_events(self, take=10, query="", ends_after=now(), starts_before=None,
                          is_online="", themes=None, category_ids=None, perks=None):
         # Set GET params
         params = {"query": query,
