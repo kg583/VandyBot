@@ -15,13 +15,11 @@ kitchen-kissamn: The Kitchen at Kissam
 kitchen-at-kissam: The Kitchen at Kissam
 the-kitchen-at-kissam: The Kitchen at Kissam
 zeppos: Zeppos Dining
-local-java: Local Java Cafe
-java: Local Java Cafe
 branscomb: Branscomb Munchie
 branscomb-munchie: Branscomb Munchie
-commons-munchie: Common Grounds Munchie
-common-grounds: Common Grounds Munchie
-common-grounds-munchie: Common Grounds Munchie
+commons-munchie: Commons Munchie
+common-grounds: Commons Munchie
+common-grounds-munchie: Commons Munchie
 highland: Highland Munchie
 highland-munchie: Highland Munchie
 kissam-munchie: Kissam Munchie

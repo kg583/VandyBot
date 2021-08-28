@@ -147,6 +147,7 @@ class Dining(commands.Cog):
     SCHEDULE = [Time("4:20 AM")]
     RETRY_DELAY = 600
     MAX_RETRIES = 3
+    CACHE_SIZE = 32
 
     MIN_MENU_AGE = 80000
     MIN_SINCE = 3600
@@ -166,7 +167,6 @@ class Dining(commands.Cog):
         self._list = reader(f"{_dir}/list")
 
         self._cache = {}
-        self._cache_size = 16
         self._reactions = reader(f"{_dir}/reactions/list")
 
         self._menu = {}
@@ -368,7 +368,7 @@ class Dining(commands.Cog):
 
             # Cache pruning
             cache = list(self._cache.items())
-            while len(cache) > self._cache_size:
+            while len(cache) > self.CACHE_SIZE:
                 oldest_message = cache[0][1][0]
                 for reaction in self._reactions.values():
                     await oldest_message.remove_reaction(reaction, self._bot.user)
@@ -379,48 +379,6 @@ class Dining(commands.Cog):
             self._bot.loop.create_task(schedule(self.get_menu, self.SCHEDULE))
         else:
             await self.retry()
-
-    def move_in(self, day: Day):
-        # I'm probably gonna keep this here and so that next year's move-in can be setup the same way
-        color = 0x866343
-        currently = now().time()
-        url = "https://campusdining.vanderbilt.edu/where-to-dine/"
-
-        # Ticking time bomb
-        if now().date() >= datetime.date(2021, 8, 23):
-            raise commands.BadArgument("Invalid argument provided: move-in") from None
-
-        if day == Day("Saturday"):
-            if currently <= Time("7:30 PM"):
-                return self.generate_embed(title="Move-In Dinner @ East Lawn", url=url, color=color,
-                                           fields={
-                                               "Crawford, East, Hank, North, and Sutherland": "5:30 PM - 6:30 PM",
-                                               "Gillette, Memorial, Murray, Stambaugh, and West": "6:30 PM - 7:30 PM"
-                                           })
-            elif currently <= Time("10:30 PM"):
-                return self.generate_embed(title="Movie on the Peabody Lawn", url=url, color=color,
-                                           fields={"Snacks": "8:30 PM - 10:30 PM"})
-            else:
-                return self.generate_embed(title="Commons Munchie", url=url, color=color,
-                                           fields={"Snacks": "8:00 PM - 12:00 AM"})
-        elif day == Day("Sunday"):
-            if currently <= Time("9:30 AM") or not day.is_today:
-                return self.menu_dispatch("commons-dining", self._menu["commons-dining"][day]["breakfast"], set())
-            elif currently <= Time("2:45 PM"):
-                return self.generate_embed(title="Boxed Lunch @ Commons Lawn", url=url, color=color,
-                                           fields={
-                                               "Visions Groups 1-46": "10:45 AM - 12:45 PM",
-                                               "Visions Groups 47-92": "12:45 PM - 2:45 PM"
-                                           })
-            elif currently <= Time("8:30 PM"):
-                return self.generate_embed(title="Dinner & Founders Walk", url=url, color=color,
-                                           fields={
-                                               "Sautees @ 2301 via the GET app": "4:00 PM - 8:00 PM",
-                                               "Founders Walk Picnic @ Commons Lawn": "7:30 PM - 8:30 PM"
-                                           })
-            else:
-                return self.generate_embed(title="Commons Munchie", url=url, color=color,
-                                           fields={"Snacks": "7:00 PM - 11:00 PM"})
 
     async def retry(self):
         # Fetch failed for some reason
@@ -472,11 +430,6 @@ class Dining(commands.Cog):
                 continue
 
             for day in days:
-                if unit_slug == "move-in":
-                    embed = self.move_in(day if day != "list" else today())
-                    await ctx.send(embed=embed)
-                    continue
-
                 if day == "list":
                     embed = self.menu_list(unit_slug)
                     await ctx.send(embed=embed)
@@ -559,7 +512,7 @@ class Dining(commands.Cog):
             embed.add_field(name="Additional Arguments",
                             value="Up to five total selections may be requested at once\ne.g. `rand ebi lunch dinner`\n"
                                   "Arguments can be specified with different separators\ne.g. `local_java`\n"
-                                  "To use spaces, wrap the entire name in quotes\ne.g. `\"commons munchie\"`\n"
+                                  "To use spaces, wrap the entire name in quotes\ne.g. `\"the commons\"`\n"
                                   "Alternative names are also permitted\ne.g. `kitchen` for `kissam`",
                             inline=False)
         elif day is None:
@@ -618,9 +571,6 @@ class Dining(commands.Cog):
                     meal_slugs = {arg: 0}
                 elif arg == "list":
                     listing = True
-                elif arg == "move-in":
-                    listing = True
-                    unit_slugs = {arg: 0}
                 else:
                     meal_slugs.update({self._meal_slugs[arg]: 0})
                 continue
