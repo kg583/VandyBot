@@ -111,7 +111,9 @@ class Hours(commands.Cog):
                     # This whole section could be one itertools block if not for closures
                     hours.update({day: ["Closed"]})
                 else:
-                    hours.update({day: hours.get(day, []) + [(Time(blocks[index + 1]), Time(blocks[index + 2]))]})
+                    # Who the hell doesn't sort the display!?
+                    hours.update({day: list(sorted(hours.get(day, []) +
+                                                   [(Time(blocks[index + 1]), Time(blocks[index + 2]))]))})
                     index += 1
 
             index += 1
