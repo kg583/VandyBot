@@ -17,3 +17,4 @@ zeppos: zeppos
 alumni: alumni-hall
 alumni-cafe: alumni-hall
 mctyeire: mctyeire
+rothschild: rothschild
