@@ -1,0 +1,7 @@
+Monday: 7:00 AM - 11:00 PM
+Tuesday: 7:00 AM - 11:00 PM
+Wednesday: 7:00 AM - 11:00 PM
+Thursday: 7:00 AM - 11:00 PM
+Friday: 7:00 AM - 8:00 PM
+Saturday: 8:00 AM - 8:00 PM
+Sunday: 12:00 PM - 11:00 PM

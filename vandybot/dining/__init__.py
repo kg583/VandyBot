@@ -152,6 +152,12 @@ class Dining(commands.Cog):
     MIN_MENU_AGE = 80000
     MIN_SINCE = 3600
 
+    LAZY_HOURS = True
+    LAZY_MAP = {
+        "breakfast": Time("11:00 AM"), "lunch": Time("3:00 PM"), "dinner": Time("8:00 PM"),
+        "brunch": Time("2:00 PM"), "daily-offerings": Time("11:59 PM")
+    }
+
     def __init__(self, bot):
         self._bot = bot
         self._session = aiohttp.ClientSession()
@@ -186,7 +192,7 @@ class Dining(commands.Cog):
         return {station: [item for item in item_list
                           if all(any((alternative.split("_")[0].capitalize() in map(lambda i: i["synced_name"],
                                                                                     item["icons"]["food_icons"]))
-                                 ^ (alternative[-5:] == "_free") for alternative in restriction)
+                                     ^ (alternative[-5:] == "_free") for alternative in restriction)
                                  for restriction in restrictions)]
                 for station, item_list in items.items()}
 
@@ -217,7 +223,8 @@ class Dining(commands.Cog):
             options = list(self._menu[unit_slug][day].values()) \
                 if meal_slug is None else [self._menu[unit_slug][day][meal_slug]]
             next_meal = first(meal for meal in sorted(options, key=lambda meal: (meal.closes, meal))
-                              if meal.items_status in permitted and meal.closes > now().time())
+                              if meal.items_status in permitted and (
+                                  self.LAZY_MAP[meal.slug] if self.LAZY_HOURS else meal.closes) > now().time())
             if next_meal is not None:
                 return next_meal
             day += 1
@@ -258,10 +265,10 @@ class Dining(commands.Cog):
     async def get_menu(self):
         # Create blank menu
         menu = {unit_slug:
-                {day:
-                 {meal_slug: Meal(meal_slug, day)
-                  for meal_slug in self._meal_set}
-                 for day in week}
+                    {day:
+                         {meal_slug: Meal(meal_slug, day)
+                          for meal_slug in self._meal_set}
+                     for day in week}
                 for unit_slug in self._unit_set}
 
         # Go through the units
@@ -332,7 +339,7 @@ class Dining(commands.Cog):
                                 try:
                                     current.opens, current.closes = unit_hours[day][hour_index]
                                     current.hours_status = Meal.HOURS_AVAILABLE
-                                    hour_index += 1
+                                    hour_index += len(set(unit_hours[day])) != 1
                                 except ValueError:
                                     # Is a closed
                                     current.hours_status = Meal.CLOSED
@@ -440,7 +447,7 @@ class Dining(commands.Cog):
 
                     if meal_slug == "next":
                         if all(meal.hours_status == Meal.HOURS_NOT_FOUND
-                               for meal in self._menu[unit_slug][day].values()):
+                               for meal in self._menu[unit_slug][day].values()) and not self.LAZY_HOURS:
                             meal_slug = "list"
                         else:
                             meal = self.find_next_meal(unit_slug, day)
@@ -519,9 +526,9 @@ class Dining(commands.Cog):
             # The week's listing
             unit_menu = self._menu[unit_slug]
             fields = {underline(day):
-                      "\n".join(map(lambda m: m.name,
-                                    sorted(unit_menu[day][name] for name in names
-                                           if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)))
+                          "\n".join(map(lambda m: m.name,
+                                        sorted(unit_menu[day][name] for name in names
+                                               if unit_menu[day][name].items_status == Meal.ITEMS_AVAILABLE)))
                       for day, names in sorted(unit_menu.items()) if any(meal.items_status == Meal.ITEMS_AVAILABLE
                                                                          for name, meal in unit_menu[day].items())}
             if not fields:

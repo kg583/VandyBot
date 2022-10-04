@@ -1,6 +1,6 @@
-Dining Centers: `2301`\n`commons`\n`ebi`\n`rand`\n`zeppos`
+Dining Centers: `2301`\n`commons`\n`ebi`\n`rand`\n`rothschild`\n`zeppos`
 Munchie Marts: `branscomb-munchie`\n`commons-munchie`\n`highland-munchie`\n`kissam-munchie`
-Retail Dining: `holy-smokes`\n`grins`\n`kissam`
+Retail Dining: `grins`\n`kissam`\n`pub`
 Suzie's Cafes: `suzies-blair`\n`suzies-central`\n`suzies-featheringill`\n`suzies-mrb`
 Libraries: `biomedical`\n`central`\n`divinity`\n`fine-arts`\n`law`\n`management`\n`music`\n`peabody`\n`science-and-engineering`\n`university-archives`
 Other Services: `bookstore`\n`post-office`

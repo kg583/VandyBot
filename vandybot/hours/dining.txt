@@ -35,10 +35,12 @@ suzie-blair: Blair School of Music
 suzies-blair: Blair School of Music
 suzie-music: Blair School of Music
 suzies-music: Blair School of Music
-holy-smokes: Holy Smokes Kosher Food Truck
 suzie-mrb: MRB III
 suzies-mrb: MRB III
 grins: Grins Vegetarian Cafe
 grins-vegetarian: Grins Vegetarian Cafe
 suzie-featheringill: Featheringill
 suzies-featheringill: Featheringill
+rothschild: Rothschild Dining Center
+pub: The Pub at Overcup Oak
+the-pub: The Pub at Overcup Oak

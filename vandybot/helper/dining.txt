@@ -6,4 +6,4 @@ kissam-dining: The Kitchen at Kissam
 mctyeire: McTyeire
 rand: Rand Dining Center
 zeppos: Zeppos Dining
-rothschild: Rothschild
+rothschild: Rothschild Dining

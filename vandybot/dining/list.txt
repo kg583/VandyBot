@@ -1,2 +1,2 @@
-Dining Centers: `2301`\n`commons`\n`ebi`\n`kissam`\n`mctyeire`\n`rand`\n`zeppos`
+Dining Centers: `2301`\n`commons`\n`ebi`\n`kissam`\n`mctyeire`\n`rand`\n`rothschild`\n`zeppos`
 Food Trucks: `buns-on-the-run`\n`califarmia`\n`chicken-shack`\n`culinary-creations`\n`delicias-colombianas`\n`florindas`\n`jays-chicago`\n`chicken-and-waffles`\n`pie-town-tacos`\n`pucketts`\n`roscoes`\n`smokin-buttz`\n`love-bus`\n`the-steaming-goat`\n`yayos`

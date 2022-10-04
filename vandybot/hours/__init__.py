@@ -1,5 +1,6 @@
 from discord import Embed
 from discord.ext import commands
+from discord.embeds import EmptyEmbed
 
 from ..helper import *
 
@@ -39,6 +40,7 @@ class Hours(commands.Cog):
     DINING_HEADER = {"Referer": DINING_URL}
     LIBRARY_URL = "https://www.library.vanderbilt.edu/hours.php"
     POST_OFFICE_URL = "https://www.vanderbilt.edu/mailservices/contact-us/locations-hours-services.php"
+    REC_URL = "https://www.vanderbilt.edu/recreationandwellnesscenter/"
 
     def __init__(self, bot):
         self._bot = bot
@@ -50,6 +52,7 @@ class Hours(commands.Cog):
         self._dining = reader(f"{_dir}/dining")
         self._libraries = reader(f"{_dir}/libraries")
         self._post_offices = reader(f"{_dir}/post_offices")
+        self._recs = reader(f"{_dir}/recs")
 
         self._loc_conditions = reader(f"{_dir}/loc_conditions")
 
@@ -58,6 +61,7 @@ class Hours(commands.Cog):
 
         self._bookstore_hours = hours_reader(f"{_dir}/bookstore_hours")
         self._post_office_hours = hours_reader(f"{_dir}/post_office_hours")
+        self._rec_hours = hours_reader(f"{_dir}/rec_hours")
 
         # Swapped unit commands
         for loc in self._dining:
@@ -185,6 +189,10 @@ class Hours(commands.Cog):
                     all_hours = self._bookstore_hours
                     footer = ""
                     url = self.BOOKSTORE_URL
+                elif loc in self._recs.values():
+                    all_hours = self._rec_hours
+                    footer = "Check the Rec website for special programming events and closures"
+                    url = self.REC_URL
                 else:
                     raise UnitNotFound(loc)
 
@@ -232,7 +240,7 @@ class Hours(commands.Cog):
         return dispatcher
 
     def hours_list(self):
-        embed = self.generate_embed(title="On-Campus Facilities", url=None,
+        embed = self.generate_embed(title="On-Campus Facilities", url=EmptyEmbed,
                                     fields=self._list,
                                     footer="Posted hours may not reflect special events or unexpected closures.",
                                     inline=True)
@@ -275,6 +283,13 @@ class Hours(commands.Cog):
             try:
                 # Is the bookstore?
                 locs.append(self._bookstores[arg])
+                continue
+            except KeyError:
+                pass
+
+            try:
+                # Is the rec?
+                locs.append(self._recs[arg])
                 continue
             except KeyError:
                 pass
